@@ -111,6 +111,7 @@ class InMemoryDB {
 
   async getQuestionsByStage(stageId: string) {
     return Array.from(this.questions.values()).filter(q => q.stageId === stageId);
+ }
 async updateQuestion(id: string, data: Partial<Question>) {
   const question = this.questions.get(id);
 
