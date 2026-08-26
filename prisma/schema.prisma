@@ -1,0 +1,168 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  displayName   String
+  avatarKey     String
+  roleClass     String
+  socketId      String?   @unique
+  isConnected   Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  teamMembers   TeamMember[]
+  playerAnswers PlayerAnswer[]
+  adminUser     AdminUser?
+
+  @@index([isConnected])
+  @@index([socketId])
+}
+
+model AdminUser {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String   // In production, use bcrypt!
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model GameSession {
+  id                   String    @id @default(cuid())
+  name                 String
+  status               String    @default("draft") // draft, published, live, paused, finished
+  theme                String    @default("Medieval Fantasy")
+  maxPlayers           Int       @default(200)
+  minPlayers           Int       @default(10)
+  teamSize             Int       @default(5)
+  totalDurationMinutes Int       @default(45)
+  numberOfStages       Int       @default(10)
+  allowIncompleteTeams Boolean   @default(true)
+  startsAt             DateTime?
+  endsAt               DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  // Relations
+  teams                Team[]
+  stages               Stage[]
+  playerAnswers        PlayerAnswer[]
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Team {
+  id              String   @id @default(cuid())
+  gameSessionId   String
+  gameSession     GameSession @relation(fields: [gameSessionId], references: [id], onDelete: Cascade)
+  name            String
+  currentStage    Int      @default(1)
+  totalCorrect    Int      @default(0)
+  totalTimeSeconds Int     @default(0)
+  finalScore      Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  members         TeamMember[]
+  playerAnswers   PlayerAnswer[]
+
+  @@unique([gameSessionId, name])
+  @@index([gameSessionId])
+  @@index([currentStage])
+}
+
+model TeamMember {
+  id        String   @id @default(cuid())
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  joinedAt  DateTime @default(now())
+
+  @@unique([teamId, userId])
+  @@index([teamId])
+  @@index([userId])
+}
+
+model Stage {
+  id              String   @id @default(cuid())
+  gameSessionId   String
+  gameSession     GameSession @relation(fields: [gameSessionId], references: [id], onDelete: Cascade)
+  stageNumber     Int
+  title           String
+  description     String?
+  visualTheme     String   @default("dungeon")
+  timeLimitSeconds Int     @default(270) // 4.5 minutes
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  questions       Question[]
+
+  @@unique([gameSessionId, stageNumber])
+  @@index([gameSessionId])
+}
+
+model Question {
+  id            String   @id @default(cuid())
+  stageId       String
+  stage         Stage    @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  questionType  String   @default("multiple_choice") // multiple_choice, short_text, true_false
+  questionText  String
+  optionA       String?
+  optionB       String?
+  optionC       String?
+  optionD       String?
+  correctAnswer String
+  pointsBase    Int      @default(100)
+  difficulty    String   @default("medium") // easy, medium, hard
+  explanation   String?
+  imageUrl      String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  playerAnswers PlayerAnswer[]
+
+  @@index([stageId])
+  @@index([isActive])
+}
+
+model PlayerAnswer {
+  id                   String   @id @default(cuid())
+  gameSessionId        String
+  gameSession          GameSession @relation(fields: [gameSessionId], references: [id], onDelete: Cascade)
+  teamId               String
+  team                 Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId               String
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stageId              String
+  questionId           String
+  question             Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  submittedAnswer      String
+  isCorrect            Boolean
+  responseTimeSeconds  Int
+  pointsAwarded        Int
+  submittedAt          DateTime @default(now())
+
+  @@unique([teamId, userId, questionId])
+  @@index([gameSessionId])
+  @@index([teamId])
+  @@index([userId])
+  @@index([stageId])
+  @@index([questionId])
+}

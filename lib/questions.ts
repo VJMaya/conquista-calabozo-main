@@ -1,0 +1,58 @@
+// lib/questions.ts
+// Preguntas de ejemplo - PUEDES MODIFICAR ESTAS
+
+export const GAME_QUESTIONS = [
+  {
+    stageId: '1',
+    questionType: 'multiple_choice',
+    questionText: '¿Cuál es la capital de Francia?',
+    optionA: 'París',
+    optionB: 'Lyon',
+    optionC: 'Marsella',
+    optionD: 'Toulouse',
+    correctAnswer: 'A',
+    pointsBase: 100,
+  },
+  {
+    stageId: '1',
+    questionType: 'multiple_choice',
+    questionText: '¿Cuál es el planeta más grande del sistema solar?',
+    optionA: 'Saturno',
+    optionB: 'Júpiter',
+    optionC: 'Neptuno',
+    optionD: 'Marte',
+    correctAnswer: 'B',
+    pointsBase: 100,
+  },
+  {
+    stageId: '1',
+    questionType: 'true_false',
+    questionText: 'La Tierra es plana',
+    optionA: 'Verdadero',
+    optionB: 'Falso',
+    correctAnswer: 'B',
+    pointsBase: 50,
+  },
+  {
+    stageId: '2',
+    questionType: 'multiple_choice',
+    questionText: '¿En qué año terminó la Primera Guerra Mundial?',
+    optionA: '1916',
+    optionB: '1918',
+    optionC: '1920',
+    optionD: '1922',
+    correctAnswer: 'B',
+    pointsBase: 100,
+  },
+  {
+    stageId: '2',
+    questionType: 'multiple_choice',
+    questionText: '¿Cuál es el animal más rápido del mundo?',
+    optionA: 'Guepardo',
+    optionB: 'Águila',
+    optionC: 'Halcón Peregrino',
+    optionD: 'Antílope',
+    correctAnswer: 'C',
+    pointsBase: 100,
+  },
+];
