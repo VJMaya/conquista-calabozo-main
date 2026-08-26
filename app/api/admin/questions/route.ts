@@ -1,6 +1,6 @@
 // app/api/admin/questions/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/prisma';
 import { CreateQuestionSchema } from '@/types/api';
 
 export async function POST(req: NextRequest) {
