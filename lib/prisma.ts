@@ -130,15 +130,13 @@ async deleteQuestion(id: string) {
   return this.questions.delete(id);
 }
 
-  }
-
-  // Reset
-  reset() {
-    this.users.clear();
-    this.teams.clear();
-    this.gameSessions.clear();
-    this.questions.clear();
-  }
+// Reset
+reset() {
+  this.users.clear();
+  this.teams.clear();
+  this.gameSessions.clear();
+  this.questions.clear();
+}
 }
 
 export const db = new InMemoryDB();
