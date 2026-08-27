@@ -8,13 +8,16 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const validated = CreateQuestionSchema.parse(body);
 
-    const question = await prisma.question.create({
-      data: validated,
-    });
+    const question = await db.addQuestion(validated);
 
-    return NextResponse.json(question, { status: 201 });
+    return NextResponse.json(
+      question,
+      { status: 201 }
+    );
+
   } catch (error) {
     console.error('Error creating question:', error);
+
     return NextResponse.json(
       { error: 'Error creating question' },
       { status: 400 }

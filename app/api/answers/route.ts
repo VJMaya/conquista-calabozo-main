@@ -1,6 +1,6 @@
 // app/api/answers/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/prisma';
 import { SubmitAnswerSchema } from '@/types/api';
 import { isAnswerCorrect, calculateIndividualPoints } from '@/lib/scoring';
 
@@ -9,16 +9,11 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const validated = SubmitAnswerSchema.parse(body);
 
-    // Verify player hasn't answered this question yet
-    const existingAnswer = await prisma.playerAnswer.findUnique({
-      where: {
-        teamId_userId_questionId: {
-          teamId: validated.teamId,
-          userId: validated.userId,
-          questionId: validated.questionId,
-        },
-      },
-    });
+    const existingAnswer = await db.findPlayerAnswer(
+      validated.teamId,
+      validated.userId,
+      validated.questionId
+    );
 
     if (existingAnswer) {
       return NextResponse.json(
@@ -27,13 +22,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Get question details
-    const question = await prisma.question.findUnique({
-      where: { id: validated.questionId },
-      include: {
-        stage: true,
-      },
-    });
+    const question = await db.findQuestionById(validated.questionId);
 
     if (!question) {
       return NextResponse.json(
@@ -42,47 +31,46 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check answer
     const isCorrect = isAnswerCorrect(
       validated.answer,
       question.correctAnswer,
-      question.questionType as 'multiple_choice' | 'short_text' | 'true_false'
+      question.questionType as
+        | 'multiple_choice'
+        | 'short_text'
+        | 'true_false'
     );
 
-    // Calculate points
     const pointsAwarded = calculateIndividualPoints(
       isCorrect,
       question.pointsBase,
-      question.stage.timeLimitSeconds,
+      question.timeLimitSeconds || 60,
       validated.timeUsedSeconds
     );
 
-    // Save answer
-    const playerAnswer = await prisma.playerAnswer.create({
-      data: {
-        gameSessionId: validated.gameSessionId,
-        teamId: validated.teamId,
-        userId: validated.userId,
-        stageId: validated.stageId,
-        questionId: validated.questionId,
-        submittedAnswer: validated.answer,
-        isCorrect,
-        responseTimeSeconds: validated.timeUsedSeconds,
-        pointsAwarded,
-        submittedAt: new Date(),
-      },
+    const playerAnswer = await db.createPlayerAnswer({
+      gameSessionId: validated.gameSessionId,
+      teamId: validated.teamId,
+      userId: validated.userId,
+      stageId: validated.stageId,
+      questionId: validated.questionId,
+      submittedAnswer: validated.answer,
+      isCorrect,
+      responseTimeSeconds: validated.timeUsedSeconds,
+      pointsAwarded,
+      submittedAt: new Date(),
     });
 
-    // Update team stats
     if (isCorrect) {
-      await prisma.team.update({
-        where: { id: validated.teamId },
-        data: {
-          totalCorrect: {
-            increment: 1,
-          },
-        },
-      });
+      const team = await db.findTeamById(validated.teamId);
+
+      if (team) {
+        await db.updateTeam(team.id, {
+          totalCorrect: team.totalCorrect + 1,
+          finalScore: team.finalScore + pointsAwarded,
+          totalTimeSeconds:
+            team.totalTimeSeconds + validated.timeUsedSeconds,
+        });
+      }
     }
 
     return NextResponse.json(
@@ -96,8 +84,12 @@ export async function POST(req: NextRequest) {
     );
   } catch (error) {
     console.error('Error submitting answer:', error);
+
     return NextResponse.json(
-      { error: 'Error submitting answer' },
+      {
+        error: 'Error submitting answer',
+        details: error instanceof Error ? error.message : String(error),
+      },
       { status: 400 }
     );
   }

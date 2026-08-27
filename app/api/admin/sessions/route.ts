@@ -1,42 +1,26 @@
 // app/api/admin/sessions/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { CreateSessionSchema } from '@/types/api';
+import { NextResponse } from 'next/server';
 
-export async function GET(req: NextRequest) {
-  try {
-    const sessions = await prisma.gameSession.findMany({
-      include: {
-        teams: true,
-        stages: true,
-      },
-    });
+const disabledResponse = () =>
+  NextResponse.json(
+    {
+      error: 'La administración no está habilitada en esta versión',
+    },
+    { status: 501 }
+  );
 
-    return NextResponse.json(sessions);
-  } catch (error) {
-    console.error('Error fetching sessions:', error);
-    return NextResponse.json(
-      { error: 'Error fetching sessions' },
-      { status: 500 }
-    );
-  }
+export async function GET() {
+  return disabledResponse();
 }
 
-export async function POST(req: NextRequest) {
-  try {
-    const body = await req.json();
-    const validated = CreateSessionSchema.parse(body);
+export async function POST() {
+  return disabledResponse();
+}
 
-    const session = await prisma.gameSession.create({
-      data: validated,
-    });
+export async function PUT() {
+  return disabledResponse();
+}
 
-    return NextResponse.json(session, { status: 201 });
-  } catch (error) {
-    console.error('Error creating session:', error);
-    return NextResponse.json(
-      { error: 'Error creating session' },
-      { status: 400 }
-    );
-  }
+export async function DELETE() {
+  return disabledResponse();
 }

@@ -24,14 +24,6 @@ const QuestionPanel: React.FC<QuestionPanelProps> = ({
       setSelectedAnswer('');
     }
   };
-
-  const options =
-    question.questionType === 'multiple_choice'
-      ? ['optionA', 'optionB', 'optionC', 'optionD']
-      : question.questionType === 'true_false'
-      ? ['True', 'False']
-      : [];
-
   return (
     <div className="dungeon-panel p-6">
       <h3 className="dungeon-title text-2xl mb-4">QUESTION</h3>
@@ -48,7 +40,7 @@ const QuestionPanel: React.FC<QuestionPanelProps> = ({
       <div className="space-y-3 mb-6">
         {question.questionType === 'multiple_choice' && (
           <>
-            {['A', 'B', 'C', 'D'].map((letter, idx) => {
+            {['A', 'B', 'C', 'D'].map((letter) => {
               const optionKey = `option${letter}` as keyof Question;
               const optionValue = question[optionKey] as string;
               return (

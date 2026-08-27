@@ -1,5 +1,4 @@
 // lib/teams.ts
-import { prisma } from './prisma';
 
 const TEAM_NAMES = [
   'Dragones de Obsidiana',

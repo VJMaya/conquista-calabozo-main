@@ -1,23 +1,26 @@
 // app/api/admin/stages/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { CreateStageSchema } from '@/types/api';
+import { NextResponse } from 'next/server';
 
-export async function POST(req: NextRequest) {
-  try {
-    const body = await req.json();
-    const validated = CreateStageSchema.parse(body);
+const disabledResponse = () =>
+  NextResponse.json(
+    {
+      error: 'La administración no está habilitada en esta versión',
+    },
+    { status: 501 }
+  );
 
-    const stage = await prisma.stage.create({
-      data: validated,
-    });
+export async function GET() {
+  return disabledResponse();
+}
 
-    return NextResponse.json(stage, { status: 201 });
-  } catch (error) {
-    console.error('Error creating stage:', error);
-    return NextResponse.json(
-      { error: 'Error creating stage' },
-      { status: 400 }
-    );
-  }
+export async function POST() {
+  return disabledResponse();
+}
+
+export async function PUT() {
+  return disabledResponse();
+}
+
+export async function DELETE() {
+  return disabledResponse();
 }

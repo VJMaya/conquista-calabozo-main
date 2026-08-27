@@ -1,5 +1,4 @@
 // lib/validators.ts
-import { z } from 'zod';
 
 // Re-export all validators from types/api
 export * from '../types/api';

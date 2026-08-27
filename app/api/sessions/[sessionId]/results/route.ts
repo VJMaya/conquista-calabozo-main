@@ -1,32 +1,32 @@
 // app/api/sessions/[sessionId]/results/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { NextResponse } from 'next/server';
+import { db } from '@/lib/prisma';
 import { compareLeaderboardEntries } from '@/lib/scoring';
 
 export async function GET(
-  req: NextRequest,
+  _req: Request,
   { params }: { params: { sessionId: string } }
 ) {
   try {
-    const teams = await prisma.team.findMany({
-      where: { gameSessionId: params.sessionId },
-      include: {
-        members: true,
-        playerAnswers: true,
-      },
-    });
+    const teams = await db.getTeamsBySession(params.sessionId);
 
-    // Calculate leaderboard
-    const leaderboard = teams
-      .map((team) => ({
-        teamId: team.id,
-        teamName: team.name,
-        totalCorrect: team.totalCorrect,
-        totalTimeSeconds: team.totalTimeSeconds,
-        finalScore: team.finalScore,
-        currentStage: team.currentStage,
-        memberCount: team.members.length,
-      }))
+    const leaderboardData = await Promise.all(
+      teams.map(async team => {
+        const members = await db.getTeamMembers(team.id);
+
+        return {
+          teamId: team.id,
+          teamName: team.name,
+          totalCorrect: team.totalCorrect,
+          totalTimeSeconds: team.totalTimeSeconds,
+          finalScore: team.finalScore,
+          currentStage: team.currentStage,
+          memberCount: members.length,
+        };
+      })
+    );
+
+    const leaderboard = leaderboardData
       .sort((a, b) =>
         compareLeaderboardEntries(
           { ...a, teamSize: a.memberCount },
@@ -44,8 +44,12 @@ export async function GET(
     });
   } catch (error) {
     console.error('Error fetching results:', error);
+
     return NextResponse.json(
-      { error: 'Error fetching results' },
+      {
+        error: 'Error fetching results',
+        details: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 }
     );
   }

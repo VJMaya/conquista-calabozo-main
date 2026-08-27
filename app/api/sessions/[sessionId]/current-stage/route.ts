@@ -1,10 +1,10 @@
 // app/api/sessions/[sessionId]/current-stage/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/prisma';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { sessionId: string; teamId?: string } }
+  { params }: { params: { sessionId: string } }
 ) {
   try {
     const { searchParams } = new URL(req.url);
@@ -17,9 +17,7 @@ export async function GET(
       );
     }
 
-    const team = await prisma.team.findUnique({
-      where: { id: teamId },
-    });
+    const team = await db.findTeamById(teamId);
 
     if (!team) {
       return NextResponse.json(
@@ -28,58 +26,54 @@ export async function GET(
       );
     }
 
-    const stage = await prisma.stage.findUnique({
-      where: {
-        gameSessionId_stageNumber: {
-          gameSessionId: params.sessionId,
-          stageNumber: team.currentStage,
-        },
-      },
-      include: {
-        questions: {
-          where: { isActive: true },
-          select: {
-            id: true,
-            stageId: true,
-            questionType: true,
-            questionText: true,
-            optionA: true,
-            optionB: true,
-            optionC: true,
-            optionD: true,
-            pointsBase: true,
-            difficulty: true,
-            imageUrl: true,
-            // Do NOT return correctAnswer
-          },
-        },
-      },
-    });
-
-    if (!stage) {
+    if (team.gameSessionId !== params.sessionId) {
       return NextResponse.json(
-        { error: 'Stage not found' },
-        { status: 404 }
+        { error: 'Team does not belong to this session' },
+        { status: 400 }
       );
     }
 
-    const question = stage.questions[0]; // Get first active question
+    const stageId = String(team.currentStage);
+    const questions = await db.getQuestionsByStage(stageId);
+    const selectedQuestion = questions.find(
+      question => question.isActive !== false
+    );
+
+    const publicQuestion = selectedQuestion
+      ? {
+          id: selectedQuestion.id,
+          stageId: selectedQuestion.stageId,
+          questionType: selectedQuestion.questionType,
+          questionText: selectedQuestion.questionText,
+          optionA: selectedQuestion.optionA,
+          optionB: selectedQuestion.optionB,
+          optionC: selectedQuestion.optionC,
+          optionD: selectedQuestion.optionD,
+          pointsBase: selectedQuestion.pointsBase,
+          difficulty: selectedQuestion.difficulty,
+          imageUrl: selectedQuestion.imageUrl,
+        }
+      : null;
 
     return NextResponse.json({
       stage: {
-        id: stage.id,
-        stageNumber: stage.stageNumber,
-        title: stage.title,
-        description: stage.description,
-        visualTheme: stage.visualTheme,
-        timeLimitSeconds: stage.timeLimitSeconds,
+        id: stageId,
+        stageNumber: team.currentStage,
+        title: `Etapa ${team.currentStage}`,
+        description: 'Etapa actual del calabozo',
+        visualTheme: 'medieval',
+        timeLimitSeconds: selectedQuestion?.timeLimitSeconds || 60,
       },
-      question: question || null,
+      question: publicQuestion,
     });
   } catch (error) {
     console.error('Error fetching current stage:', error);
+
     return NextResponse.json(
-      { error: 'Error fetching stage' },
+      {
+        error: 'Error fetching stage',
+        details: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 }
     );
   }

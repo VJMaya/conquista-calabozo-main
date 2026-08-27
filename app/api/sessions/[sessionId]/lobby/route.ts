@@ -1,42 +1,24 @@
 // app/api/sessions/[sessionId]/lobby/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { NextResponse } from 'next/server';
+import { db } from '@/lib/prisma';
 
 export async function GET(
-  req: NextRequest,
+  _req: Request,
   { params }: { params: { sessionId: string } }
 ) {
   try {
-    const session = await prisma.gameSession.findUnique({
-      where: { id: params.sessionId },
-      include: {
-        teams: {
-          include: {
-            members: {
-              include: {
-                user: true,
-              },
-            },
-          },
-        },
-      },
-    });
+    const session = await db.getOrCreateGameSession(params.sessionId);
+    const teams = await db.getTeamsBySession(params.sessionId);
 
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Session not found' },
-        { status: 404 }
-      );
-    }
-
-    // Get all players in the session
-    const allPlayers = session.teams.flatMap(team =>
-      team.members.map(member => ({
-        id: member.user.id,
-        displayName: member.user.displayName,
-        avatarKey: member.user.avatarKey,
-      }))
+    const playerGroups = await Promise.all(
+      teams.map(team => db.getTeamMembers(team.id))
     );
+
+    const allPlayers = playerGroups.flat().map(user => ({
+      id: user.id,
+      displayName: user.displayName,
+      avatarKey: user.avatarKey,
+    }));
 
     return NextResponse.json({
       sessionId: session.id,
@@ -46,12 +28,16 @@ export async function GET(
       maxPlayers: session.maxPlayers,
       minPlayers: session.minPlayers,
       players: allPlayers,
-      teams: session.teams.length,
+      teams: teams.length,
     });
   } catch (error) {
     console.error('Error fetching lobby:', error);
+
     return NextResponse.json(
-      { error: 'Error fetching lobby' },
+      {
+        error: 'Error fetching lobby',
+        details: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 }
     );
   }

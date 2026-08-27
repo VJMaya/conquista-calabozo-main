@@ -1,5 +1,5 @@
 // components/ui/TimerBar.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 
 interface TimerBarProps {
   totalSeconds: number;
