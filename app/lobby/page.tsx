@@ -16,6 +16,7 @@ interface LobbyPlayer {
 
 export default function LobbyPage() {
   const router = useRouter();
+
   const [socket, setSocket] = useState<Socket | null>(null);
   const [players, setPlayers] = useState<LobbyPlayer[]>([]);
   const [connectedPlayers, setConnectedPlayers] = useState(0);
@@ -34,15 +35,32 @@ export default function LobbyPage() {
       return;
     }
 
-    const newSocket = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3000');
+    const newSocket = io();
 
     newSocket.on('connect', () => {
-      newSocket.emit('player:join_lobby', { displayName, avatarKey });
+      console.log('✅ Conectado al lobby');
+
+      newSocket.emit('player:join_lobby', {
+        displayName,
+        avatarKey,
+      });
     });
 
     newSocket.on('lobby:update', (data) => {
       setPlayers(data.players || []);
-      setConnectedPlayers(data.connectedPlayers);
+      setConnectedPlayers(data.connectedPlayers || 0);
+    });
+
+    // ESCUCHAR INICIO DEL JUEGO
+    newSocket.on('game:started', (data) => {
+      console.log('🎮 Juego iniciado:', data);
+
+      localStorage.setItem(
+        'currentStage',
+        String(data.currentStage)
+      );
+
+      router.push('/game');
     });
 
     setSocket(newSocket);
@@ -56,105 +74,152 @@ export default function LobbyPage() {
   const handleReady = () => {
     if (socket && !isReady) {
       const userId = localStorage.getItem('userId');
+
       if (userId) {
-        socket.emit('player:ready', { userId });
+        socket.emit('player:ready', {
+          userId,
+        });
+
         setIsReady(true);
       }
     }
   };
 
-  const canStart = connectedPlayers >= minPlayers && connectedPlayers <= maxPlayers;
+  const canStart =
+    connectedPlayers >= minPlayers &&
+    connectedPlayers <= maxPlayers;
 
   return (
     <Layout>
       <div className="min-h-screen p-4">
         <div className="max-w-4xl mx-auto">
-          {/* Header */}
+
           <div className="text-center mb-12">
-            <h1 className="dungeon-title text-4xl mb-2">SALA DE ESPERA</h1>
-            <p className="dungeon-subtitle">Preparándose para el Calabozo</p>
+            <h1 className="dungeon-title text-4xl mb-2">
+              SALA DE ESPERA
+            </h1>
+
+            <p className="dungeon-subtitle">
+              Preparándose para el Calabozo
+            </p>
           </div>
 
-          {/* Status */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+
             <Card>
               <div className="text-center">
-                <p className="text-dungeon-text-secondary text-xs uppercase mb-2">Jugadores</p>
+                <p className="text-dungeon-text-secondary text-xs uppercase mb-2">
+                  Jugadores
+                </p>
+
                 <p className="text-3xl font-bold text-dungeon-border">
                   {connectedPlayers}/{maxPlayers}
                 </p>
               </div>
             </Card>
+
             <Card>
               <div className="text-center">
-                <p className="text-dungeon-text-secondary text-xs uppercase mb-2">Equipos</p>
+                <p className="text-dungeon-text-secondary text-xs uppercase mb-2">
+                  Equipos
+                </p>
+
                 <p className="text-3xl font-bold text-dungeon-blue">
                   {Math.floor(connectedPlayers / 5)}
                 </p>
               </div>
             </Card>
+
             <Card>
               <div className="text-center">
-                <p className="text-dungeon-text-secondary text-xs uppercase mb-2">Estado</p>
-                <p className={`text-lg font-bold ${
-                  canStart ? 'text-dungeon-green' : 'text-yellow-400'
-                }`}>
+                <p className="text-dungeon-text-secondary text-xs uppercase mb-2">
+                  Estado
+                </p>
+
+                <p
+                  className={`text-lg font-bold ${
+                    canStart
+                      ? 'text-dungeon-green'
+                      : 'text-yellow-400'
+                  }`}
+                >
                   {canStart ? '✓ Listo' : '⏳ Esperando'}
                 </p>
               </div>
             </Card>
+
             <Card>
               <div className="text-center">
-                <p className="text-dungeon-text-secondary text-xs uppercase mb-2">Mínimo</p>
+                <p className="text-dungeon-text-secondary text-xs uppercase mb-2">
+                  Mínimo
+                </p>
+
                 <p className="text-3xl font-bold text-dungeon-purple">
                   {minPlayers}
                 </p>
               </div>
             </Card>
+
           </div>
 
-          {/* Info Message */}
           <Card className="mb-8 bg-dungeon-purple border-dungeon-border">
             <p className="text-center text-dungeon-text">
-              Los equipos se formarán automáticamente cuando se reúnan {minPlayers} jugadores.
-              Haz clic en "Estoy Listo" para confirmar tu participación.
+              Los equipos se formarán automáticamente cuando se reúnan
+              {` ${minPlayers} `}
+              jugadores.
             </p>
           </Card>
 
-          {/* Players Grid */}
           <div className="mb-8">
-            <h2 className="dungeon-title text-2xl mb-4">JUGADORES CONECTADOS</h2>
+
+            <h2 className="dungeon-title text-2xl mb-4">
+              JUGADORES CONECTADOS
+            </h2>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
               {players.map((player) => {
-                const emoji = {
-                  fairy: '✨',
-                  wizard: '🧙',
-                  knight: '⚔️',
-                  archer: '🏹',
-                  elf: '🧝',
-                  dwarf: '⛏️',
-                }[player.avatarKey] || '⚔️';
+
+                const emoji =
+                  {
+                    fairy: '✨',
+                    wizard: '🧙',
+                    knight: '⚔️',
+                    archer: '🏹',
+                    elf: '🧝',
+                    dwarf: '⛏️',
+                  }[player.avatarKey] || '⚔️';
 
                 return (
                   <Card key={player.id}>
                     <div className="flex items-center gap-3">
-                      <div className="text-3xl">{emoji}</div>
+                      <div className="text-3xl">
+                        {emoji}
+                      </div>
+
                       <div>
-                        <p className="font-bold text-dungeon-text">{player.displayName}</p>
+                        <p className="font-bold text-dungeon-text">
+                          {player.displayName}
+                        </p>
+
                         <p className="text-xs uppercase text-dungeon-text-secondary">
                           {player.avatarKey}
                         </p>
                       </div>
+
                       <div className="ml-auto w-2 h-2 bg-dungeon-green rounded-full" />
                     </div>
                   </Card>
                 );
+
               })}
+
             </div>
+
           </div>
 
-          {/* Action Button */}
           <div className="text-center">
+
             <Button
               onClick={handleReady}
               disabled={isReady || isLoading}
@@ -162,9 +227,13 @@ export default function LobbyPage() {
               variant="success"
               className="px-12"
             >
-              {isReady ? '✓ Ya Estoy Listo' : 'Estoy Listo'}
+              {isReady
+                ? '✓ Ya Estoy Listo'
+                : 'Estoy Listo'}
             </Button>
+
           </div>
+
         </div>
       </div>
     </Layout>
