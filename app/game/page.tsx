@@ -6,7 +6,6 @@ import { io, Socket } from 'socket.io-client';
 import Layout from '@/components/Layout';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
-import TimerBar from '@/components/ui/TimerBar';
 import QuestionPanel from '@/components/game/QuestionPanel';
 import LeaderboardPanel from '@/components/game/LeaderboardPanel';
 import PlayerCard from '@/components/game/PlayerCard';
@@ -45,6 +44,8 @@ interface AnswerFeedback {
 
 const TOTAL_QUESTIONS = 50;
 const TOTAL_STAGES = 10;
+const MAX_TEAMS = 50;
+const STAGE_RULE = '═══════════════════════════';
 
 function resolveTeamId(team: TeamState | null) {
   return team?.id || team?.teamId || '';
@@ -52,6 +53,14 @@ function resolveTeamId(team: TeamState | null) {
 
 function resolveTeamName(team: TeamState | null) {
   return team?.name || team?.teamName || 'Unassigned team';
+}
+
+function GoldRule() {
+  return (
+    <p className="overflow-hidden text-center font-bold tracking-[0.18em] text-[#d4af37] sm:tracking-[0.35em]">
+      {STAGE_RULE}
+    </p>
+  );
 }
 
 export default function GamePage() {
@@ -216,6 +225,21 @@ export default function GamePage() {
   const answeredProgress = connectedMembers
     ? Math.min(100, Math.round((answeredCount / connectedMembers) * 100))
     : 0;
+  const timerPercent = question?.timeLimitSeconds
+    ? Math.max(0, Math.min(100, (remainingSeconds / question.timeLimitSeconds) * 100))
+    : 0;
+  const timerBarClass =
+    timerPercent > 50
+      ? 'bg-dungeon-green'
+      : timerPercent > 25
+        ? 'bg-yellow-400'
+        : 'bg-dungeon-red';
+  const timerTextClass =
+    timerPercent > 50
+      ? 'text-dungeon-green'
+      : timerPercent > 25
+        ? 'text-yellow-400'
+        : 'text-dungeon-red';
 
   const screenMode = useMemo(() => {
     if (teamFinished) return 'completed';
@@ -226,11 +250,13 @@ export default function GamePage() {
 
   return (
     <Layout>
-      <div className="min-h-screen px-3 py-4 sm:p-6">
-        <div className="mx-auto max-w-6xl space-y-4">
+      <div className="min-h-screen bg-[#0a0e27] px-3 py-4 sm:px-6 sm:py-6 lg:px-8">
+        <div className="mx-auto max-w-6xl space-y-4 sm:space-y-5">
           <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h1 className="dungeon-title text-2xl sm:text-3xl">Conquest of the Dungeon</h1>
+              <h1 className="dungeon-title text-2xl sm:text-3xl lg:text-4xl">
+                Conquest of the Dungeon
+              </h1>
               <p className="dungeon-subtitle text-sm sm:text-base">{teamName}</p>
             </div>
             <div className="grid grid-cols-2 gap-2 sm:flex">
@@ -247,140 +273,89 @@ export default function GamePage() {
             </div>
           </header>
 
-          <section className="dungeon-panel overflow-hidden">
-            <div className="bg-dungeon-secondary px-4 py-3 sm:px-6">
-              <p className="text-xs uppercase tracking-[0.2em] text-dungeon-text-secondary">
-                Stage banner
-              </p>
-              <div className="mt-1 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                  <p className="dungeon-title text-lg sm:text-2xl">
-                    Stage {stageNumber}/{TOTAL_STAGES}
-                  </p>
-                  <h2 className="text-base font-bold text-dungeon-text sm:text-xl">
-                    {question?.stageTitle || 'Awaiting the next chamber'}
-                  </h2>
-                </div>
-                <p className="text-sm text-dungeon-text-secondary">
-                  Rank #{ownStanding?.rank || '—'}
-                </p>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3 px-4 py-3 text-sm sm:grid-cols-4 sm:px-6">
-              <div>
-                <p className="uppercase text-dungeon-text-secondary">Question</p>
-                <p className="font-bold">
-                  {questionNumber}/{totalQuestions}
-                </p>
-              </div>
-              <div>
-                <p className="uppercase text-dungeon-text-secondary">Answered</p>
-                <p className="font-bold">
-                  {answeredCount}/{connectedMembers}
-                </p>
-              </div>
-              <div>
-                <p className="uppercase text-dungeon-text-secondary">Correct</p>
-                <p className="font-bold">{ownStanding?.totalCorrect ?? team?.totalCorrect ?? 0}</p>
-              </div>
-              <div>
-                <p className="uppercase text-dungeon-text-secondary">Time</p>
-                <p className="font-bold">{ownStanding?.totalTimeSeconds ?? team?.totalTimeSeconds ?? 0}s</p>
-              </div>
-            </div>
-            <div className="px-4 pb-4 sm:px-6">
-              <div className="mb-1 flex justify-between text-xs uppercase text-dungeon-text-secondary">
-                <span>Question progress</span>
-                <span>{questionProgress}%</span>
-              </div>
-              <div className="h-3 overflow-hidden border-2 border-dungeon-border bg-dungeon-secondary">
-                <div
-                  className="h-full bg-dungeon-border transition-all duration-300"
-                  style={{ width: `${questionProgress}%` }}
-                />
-              </div>
-            </div>
+          <section className="dungeon-panel overflow-hidden bg-[#1a1f3a] px-4 py-5 text-center sm:px-8 sm:py-7">
+            <GoldRule />
+            <p className="dungeon-title mt-3 text-xl tracking-[0.25em] sm:text-3xl sm:tracking-[0.35em]">
+              STAGE {stageNumber} OF {TOTAL_STAGES}
+            </p>
+            <h2 className="mt-2 text-xl font-black uppercase leading-tight text-[#e0e6ff] sm:text-3xl">
+              {question?.stageTitle || 'Awaiting the next chamber'}
+            </h2>
+            <GoldRule />
+            <p className="mx-auto mt-3 max-w-2xl text-sm italic text-[#8892b0] sm:text-base">
+              {question?.stageDescription || 'The dungeon waits in silence.'}
+            </p>
           </section>
 
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-6">
             <div className="space-y-4 lg:col-span-2">
               {screenMode === 'completed' && (
-                <Card>
-                  <p className="text-xs uppercase tracking-[0.2em] text-dungeon-text-secondary">
-                    Team completed
+                <div className="dungeon-panel border-[#d4af37] bg-[#141829] px-5 py-8 text-center sm:px-10">
+                  <p className="dungeon-title text-3xl sm:text-4xl">🏆 MISSION COMPLETED</p>
+                  <p className="mt-4 text-lg font-bold text-[#e0e6ff]">Team: {teamName}</p>
+                  <p className="mt-2 text-base text-[#e0e6ff]">
+                    Correct Answers: {ownStanding?.totalCorrect ?? team?.totalCorrect ?? 0}
                   </p>
-                  <h2 className="dungeon-title mt-2 text-2xl">Your team has finished</h2>
-                  <p className="mt-3 text-dungeon-text">
-                    You completed all {TOTAL_QUESTIONS} questions. Wait here while the remaining
-                    teams finish. The champion is revealed when every team is done.
+                  <p className="mt-1 text-base text-[#d4af37]">
+                    Current Rank: #{ownStanding?.rank || '—'}
                   </p>
-                  <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                    <div className="dungeon-panel p-3">
-                      <p className="uppercase text-dungeon-text-secondary">Final rank</p>
-                      <p className="text-xl font-bold">#{ownStanding?.rank || '—'}</p>
-                    </div>
-                    <div className="dungeon-panel p-3">
-                      <p className="uppercase text-dungeon-text-secondary">Correct answers</p>
-                      <p className="text-xl font-bold">
-                        {ownStanding?.totalCorrect ?? team?.totalCorrect ?? 0}
-                      </p>
-                    </div>
-                  </div>
-                </Card>
+                  <p className="mt-6 text-sm uppercase tracking-[0.2em] text-[#8892b0]">
+                    Waiting for remaining teams...
+                  </p>
+                </div>
               )}
 
               {screenMode === 'waiting' && (
                 <Card>
-                  <p className="text-xs uppercase tracking-[0.2em] text-dungeon-text-secondary">
+                  <p className="text-center text-xs uppercase tracking-[0.28em] text-[#d4af37]">
                     Waiting for teammates
                   </p>
-                  <h2 className="dungeon-title mt-2 text-2xl">Answer locked in</h2>
-                  <p className="mt-3">
-                    Stay ready. Your team advances automatically when every connected member
-                    answers or the timer expires.
+                  <h2 className="dungeon-title mt-3 text-center text-2xl sm:text-3xl">
+                    Answer locked in
+                  </h2>
+                  <p className="mt-3 text-center text-[#8892b0]">
+                    Your party advances when every connected member answers or the timer expires.
                   </p>
-                  <div className="mt-4">
-                    <div className="mb-1 flex justify-between text-xs uppercase text-dungeon-text-secondary">
-                      <span>Members answered</span>
-                      <span>
-                        {answeredCount}/{connectedMembers}
-                      </span>
-                    </div>
-                    <div className="h-3 overflow-hidden border-2 border-dungeon-border bg-dungeon-secondary">
-                      <div
-                        className="h-full bg-dungeon-green transition-all duration-300"
-                        style={{ width: `${answeredProgress}%` }}
-                      />
-                    </div>
-                  </div>
                 </Card>
               )}
 
               {screenMode === 'playing' && question && (
                 <>
-                  <Card>
-                    <p className="mb-3 text-sm uppercase text-dungeon-text-secondary">
+                  <div className="dungeon-panel bg-[#141829] px-4 py-6 text-center sm:px-8">
+                    <p className={`text-lg font-black uppercase tracking-wide ${timerTextClass}`}>
+                      {remainingSeconds} {remainingSeconds === 1 ? 'Second' : 'Seconds'} Remaining
+                    </p>
+                    <div className="mx-auto mt-4 h-6 max-w-xl overflow-hidden border-2 border-[#d4af37] bg-[#0a0e27] sm:h-8">
+                      <div
+                        className={`h-full transition-all duration-200 ${timerBarClass}`}
+                        style={{ width: `${timerPercent}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="dungeon-panel bg-[#1a1f3a] p-4 sm:p-6">
+                    <p className="mb-4 text-center text-xs uppercase tracking-[0.28em] text-[#d4af37]">
                       Question {questionNumber} of {totalQuestions}
                     </p>
-                    <TimerBar
-                      totalSeconds={question.timeLimitSeconds}
-                      remainingSeconds={remainingSeconds}
-                      isActive={!answered}
-                    />
-                  </Card>
-                  <QuestionPanel
-                    key={question.id}
-                    question={question}
-                    onSubmit={submitAnswer}
-                    isDisabled={answered}
-                  />
+                    <p className="mb-6 text-2xl font-black leading-snug text-[#e0e6ff] sm:text-3xl">
+                      {question.questionText}
+                    </p>
+                    <div className="[&_.dungeon-title]:hidden [&_p.text-lg]:hidden [&>div]:border-0 [&>div]:bg-transparent [&>div]:p-0">
+                      <QuestionPanel
+                        key={question.id}
+                        question={question}
+                        onSubmit={submitAnswer}
+                        isDisabled={answered}
+                      />
+                    </div>
+                  </div>
                 </>
               )}
 
               {screenMode === 'idle' && (
                 <Card>
                   <h2 className="dungeon-title text-2xl">Waiting for the next question</h2>
-                  <p className="mt-3">
+                  <p className="mt-3 text-[#8892b0]">
                     Stay connected. Your team advances on its own as soon as everyone answers or
                     time runs out.
                   </p>
@@ -388,57 +363,102 @@ export default function GamePage() {
               )}
 
               {feedback && (
-                <Card>
-                  <p
-                    className={`text-xs uppercase tracking-[0.2em] ${
-                      feedback.isCorrect ? 'text-dungeon-green' : 'text-dungeon-red'
-                    }`}
-                  >
-                    {feedback.isCorrect ? 'Correct answer' : 'Incorrect answer'}
-                  </p>
-                  <h3 className="mt-2 text-xl font-bold">
-                    {feedback.isCorrect
-                      ? `Correct! +${feedback.pointsAwarded} points`
-                      : `Incorrect. The answer was ${feedback.correctAnswer}.`}
-                  </h3>
-                  {feedback.userAnswer && (
-                    <p className="mt-2 text-sm text-dungeon-text-secondary">
-                      You selected {feedback.userAnswer}.
-                    </p>
+                <div
+                  className={`border-2 px-5 py-6 text-center ${
+                    feedback.isCorrect
+                      ? 'border-dungeon-green bg-[#10261a]'
+                      : 'border-dungeon-red bg-[#2a1216]'
+                  }`}
+                >
+                  {feedback.isCorrect ? (
+                    <>
+                      <p className="text-2xl font-black uppercase tracking-[0.2em] text-dungeon-green sm:text-3xl">
+                        ✅ CORRECT
+                      </p>
+                      <p className="mt-3 text-xl font-black text-[#d4af37] sm:text-2xl">
+                        +{feedback.pointsAwarded} POINTS
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-2xl font-black uppercase tracking-[0.2em] text-dungeon-red sm:text-3xl">
+                        ❌ INCORRECT
+                      </p>
+                      <p className="mt-3 text-lg font-bold text-[#e0e6ff]">
+                        Correct Answer: {feedback.correctAnswer}
+                      </p>
+                    </>
                   )}
-                </Card>
+                </div>
               )}
             </div>
 
             <aside className="space-y-4">
-              <Card>
-                <h3 className="dungeon-title text-lg">Team information</h3>
-                <p className="mt-1 text-sm text-dungeon-text-secondary">{teamName}</p>
-                <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <p className="uppercase text-dungeon-text-secondary">Ranking position</p>
-                    <p className="text-lg font-bold">#{ownStanding?.rank || '—'}</p>
-                  </div>
-                  <div>
-                    <p className="uppercase text-dungeon-text-secondary">Members answered</p>
-                    <p className="text-lg font-bold">
-                      {answeredCount}/{connectedMembers}
-                    </p>
-                  </div>
+              <div className="dungeon-panel bg-[#141829] p-4 text-center sm:p-5">
+                <p className="text-xs uppercase tracking-[0.28em] text-[#d4af37]">🏆 TEAM RANK</p>
+                <p className="dungeon-title mt-2 text-4xl sm:text-5xl">
+                  #{ownStanding?.rank || '—'}
+                </p>
+                <p className="mt-1 text-sm font-bold uppercase tracking-[0.2em] text-[#8892b0]">
+                  OF {MAX_TEAMS}
+                </p>
+              </div>
+
+              <div className="dungeon-panel bg-[#1a1f3a] p-4 sm:p-5">
+                <p className="text-center text-xs uppercase tracking-[0.28em] text-[#d4af37]">
+                  QUESTION PROGRESS
+                </p>
+                <div className="mt-4 h-5 overflow-hidden border-2 border-[#d4af37] bg-[#0a0e27]">
+                  <div
+                    className="h-full bg-[#d4af37] transition-all duration-300"
+                    style={{ width: `${questionProgress}%` }}
+                  />
                 </div>
+                <p className="mt-3 text-center text-sm font-bold uppercase tracking-wide">
+                  Question {questionNumber} / {totalQuestions}
+                </p>
+              </div>
+
+              <div className="dungeon-panel bg-[#1a1f3a] p-4 sm:p-5">
+                <p className="text-center text-xs uppercase tracking-[0.28em] text-[#d4af37]">
+                  TEAM STATUS
+                </p>
+                <p className="mt-3 text-center text-sm uppercase text-[#8892b0]">Members Answered</p>
+                <p className="mt-1 text-center text-3xl font-black text-[#e0e6ff]">
+                  {answeredCount} / {connectedMembers}
+                </p>
+                <div className="mt-4 h-4 overflow-hidden border-2 border-[#d4af37] bg-[#0a0e27]">
+                  <div
+                    className="h-full bg-dungeon-green transition-all duration-300"
+                    style={{ width: `${answeredProgress}%` }}
+                  />
+                </div>
+              </div>
+
+              <Card>
+                <h3 className="dungeon-title text-lg">{teamName}</h3>
                 <div className="mt-4 space-y-3">
-                  {(team?.members || []).map((member) => (
-                    <PlayerCard
-                      key={member.id}
-                      player={{
-                        ...member,
-                        isConnected: member.isConnected !== false,
-                      }}
-                      isCurrentUser={member.id === userId}
-                    />
-                  ))}
+                  {(team?.members || []).map((member) => {
+                    const connected = member.isConnected !== false;
+                    return (
+                      <div key={member.id}>
+                        <PlayerCard
+                          player={{ ...member, isConnected: connected }}
+                          isCurrentUser={member.id === userId}
+                        />
+                        <p
+                          className={`mt-1 text-xs font-bold uppercase tracking-wide ${
+                            connected ? 'text-dungeon-green' : 'text-dungeon-red'
+                          }`}
+                        >
+                          {connected ? '🟢 Connected' : '🔴 Disconnected'}
+                        </p>
+                      </div>
+                    );
+                  })}
                 </div>
               </Card>
+
               {showLeaderboard && (
                 <LeaderboardPanel entries={leaderboard} currentUserTeamId={teamId} />
               )}
