@@ -91,6 +91,10 @@ export interface ScoreResult {
   timeUsedSeconds: number;
 }
 
+export function createId(): string {
+  return Math.random().toString(36).slice(2, 11);
+}
+
 export function canStartGame(playerCount: number): { ok: boolean; message?: string } {
   if (playerCount < MIN_PLAYERS_TO_START) {
     return { ok: false, message: `At least ${MIN_PLAYERS_TO_START} players are required` };
@@ -160,6 +164,18 @@ export function scoreAnswer(
     correctAnswer: question.correctAnswer,
     timeUsedSeconds: cappedTime,
   };
+}
+
+export function calculateScores(players: RuntimePlayer[]): number {
+  return players.reduce((sum, player) => sum + (player.points || 0), 0);
+}
+
+export function calculateCorrectAnswers(team: RuntimeTeam): number {
+  return team.totalCorrect;
+}
+
+export function calculateTotalCompletionTime(team: RuntimeTeam): number {
+  return team.totalTimeSeconds;
 }
 
 export function publicQuestionPayload(questionIndex: number) {
@@ -330,6 +346,10 @@ export function buildLeaderboard(teams: RuntimeTeam[]): LeaderboardEntry[] {
     }));
 }
 
+export function determineWinningTeam(teams: RuntimeTeam[]): LeaderboardEntry | null {
+  return buildLeaderboard(teams)[0] || null;
+}
+
 export function buildPlayerStandings(
   players: RuntimePlayer[],
   teams: Map<string, RuntimeTeam>
@@ -359,6 +379,13 @@ export function computeMvp(standings: PlayerStanding[]): PlayerStanding | null {
   return standings[0] || null;
 }
 
+export function determineMvpPlayer(
+  players: RuntimePlayer[],
+  teams: RuntimeTeam[]
+): PlayerStanding | null {
+  return computeMvp(buildPlayerStandings(players, new Map(teams.map((team) => [team.id, team]))));
+}
+
 export function allTeamsCompleted(teams: RuntimeTeam[]): boolean {
   return teams.length > 0 && teams.every((team) => team.completed);
 }
@@ -370,7 +397,7 @@ export function createFinalResults(teams: RuntimeTeam[], players: RuntimePlayer[
   const totalPossibleAnswers = players.length * TOTAL_QUESTIONS;
 
   return {
-    champion: leaderboard[0] || null,
+    champion: determineWinningTeam(teams),
     top3: leaderboard.slice(0, 3),
     mvp: computeMvp(standings),
     leaderboard,
@@ -390,4 +417,4 @@ export function createFinalResults(teams: RuntimeTeam[], players: RuntimePlayer[
   };
 }
 
-export { QUESTIONS, TOTAL_QUESTIONS, TOTAL_STAGES };
+export { QUESTIONS, TOTAL_QUESTIONS, TOTAL_STAGES, generateTeams, getQuestionAtIndex };
