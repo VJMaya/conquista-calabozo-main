@@ -1,4 +1,3 @@
-// server.js
 const http = require('http');
 const { parse } = require('url');
 const next = require('next');
@@ -16,15 +15,16 @@ app.prepare().then(() => {
     handle(req, res, parsedUrl);
   });
 
-  // Inicializar Socket.IO
   initializeSocket(server);
 
   server.listen(PORT, (err) => {
     if (err) throw err;
-    console.log(`\n🎮 ===================================`);
-    console.log(`✅ Servidor iniciado en http://localhost:${PORT}`);
-    console.log(`\n📱 Comparte este enlace con otros jugadores:`);
+    console.log(`\n===================================`);
+    console.log(`Conquest of the Dungeon V5`);
+    console.log(`Server running at http://localhost:${PORT}`);
+    console.log(`Share this link with other players:`);
     console.log(`   http://localhost:${PORT}`);
-    console.log(`\n🎮 ===================================\n`);
+    console.log(`Admin panel: http://localhost:${PORT}/admin`);
+    console.log(`===================================\n`);
   });
 });

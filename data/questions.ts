@@ -1,48 +1,45 @@
-export const stages = [
-  {
-    stageNumber: 1,
-    title: 'La Entrada del Calabozo',
-    timeLimitSeconds: 60,
+import {
+  QUESTIONS as PACK_QUESTIONS,
+  QUESTIONS_PER_STAGE,
+  TOTAL_QUESTIONS,
+  type PackQuestion,
+  type QuestionDifficulty,
+} from './pack';
 
-    questions: [
-      {
-        id: 'q1',
-        questionType: 'multiple_choice',
-        questionText: '¿Cuál es la capital de México?',
-        optionA: 'Monterrey',
-        optionB: 'Guadalajara',
-        optionC: 'Ciudad de México',
-        optionD: 'Puebla',
-        correctAnswer: 'C',
-        pointsBase: 100,
-      },
-      {
-        id: 'q2',
-        questionType: 'true_false',
-        questionText: 'Oaxaca pertenece a México',
-        correctAnswer: 'True',
-        pointsBase: 50,
-      },
-    ],
-  },
+export type { QuestionDifficulty };
 
-  {
-    stageNumber: 2,
-    title: 'El Bosque Maldito',
-    timeLimitSeconds: 45,
+export type GameQuestion = PackQuestion;
 
-    questions: [
-      {
-        id: 'q3',
-        questionType: 'multiple_choice',
-        questionText: '¿Cuánto es 3 x 5?',
-        optionA: '10',
-        optionB: '15',
-        optionC: '20',
-        optionD: '25',
-        correctAnswer: 'B',
-        pointsBase: 100,
-      },
-    ],
-  },
-];
+export const QUESTIONS: GameQuestion[] = PACK_QUESTIONS;
+
+export { QUESTIONS_PER_STAGE, TOTAL_QUESTIONS };
+
+export function getQuestionById(questionId: string): GameQuestion | undefined {
+  return QUESTIONS.find((question) => question.id === questionId);
+}
+
+export function getQuestionsByStage(stageNumber: number): GameQuestion[] {
+  return QUESTIONS.filter((question) => question.stageNumber === stageNumber);
+}
+
+export function getQuestionAtIndex(index: number): GameQuestion | undefined {
+  return QUESTIONS[index];
+}
+
+export function toPublicQuestion(question: GameQuestion, questionIndex: number) {
+  return {
+    id: question.id,
+    stageNumber: question.stageNumber,
+    questionText: question.questionText,
+    optionA: question.optionA,
+    optionB: question.optionB,
+    optionC: question.optionC,
+    optionD: question.optionD,
+    pointsBase: question.pointsBase,
+    timeLimitSeconds: question.timeLimitSeconds,
+    difficulty: question.difficulty,
+    questionType: 'multiple_choice' as const,
+    questionNumber: questionIndex + 1,
+    totalQuestions: TOTAL_QUESTIONS,
+  };
+}

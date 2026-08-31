@@ -30,7 +30,7 @@ const TimerBar: React.FC<TimerBarProps> = ({
   return (
     <div className="w-full">
       <div className="flex justify-between mb-2">
-        <span className="text-dungeon-text-secondary text-sm uppercase">Tiempo restante</span>
+        <span className="text-dungeon-text-secondary text-sm uppercase">Time remaining</span>
         <span className={`font-bold ${
           isEmergency ? 'text-dungeon-red' :
           isWarning ? 'text-yellow-400' :

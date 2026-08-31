@@ -13,7 +13,7 @@ const LeaderboardPanel: React.FC<LeaderboardPanelProps> = ({
 }) => {
   return (
     <div className="dungeon-panel p-4">
-      <h3 className="dungeon-title text-lg mb-4">RANKING EN VIVO</h3>
+      <h3 className="dungeon-title text-lg mb-4">LIVE RANKING</h3>
       <div className="space-y-2 max-h-96 overflow-y-auto">
         {entries.map((entry) => (
           <div
@@ -33,7 +33,7 @@ const LeaderboardPanel: React.FC<LeaderboardPanelProps> = ({
                   {entry.teamName}
                 </p>
                 <p className="text-xs uppercase opacity-75">
-                  Etapa {entry.currentStage}/10 • ✓ {entry.totalCorrect}
+                  Stage {entry.currentStage}/10 • ✓ {entry.totalCorrect} · {entry.totalTimeSeconds}s
                 </p>
               </div>
               <p className="font-bold text-lg">{entry.finalScore}</p>

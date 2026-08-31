@@ -1,4 +1,3 @@
-// app/page.tsx
 'use client';
 
 import React, { useState } from 'react';
@@ -9,12 +8,12 @@ import Input from '@/components/ui/Input';
 import { AvatarClass } from '@/types/game';
 
 const AVATAR_CLASSES: { key: AvatarClass; emoji: string; name: string }[] = [
-  { key: 'fairy', emoji: '✨', name: 'Hada' },
-  { key: 'wizard', emoji: '🧙', name: 'Mago' },
-  { key: 'knight', emoji: '⚔️', name: 'Caballero' },
-  { key: 'archer', emoji: '🏹', name: 'Arquero' },
-  { key: 'elf', emoji: '🧝', name: 'Elfo' },
-  { key: 'dwarf', emoji: '⛏️', name: 'Enano' },
+  { key: 'fairy', emoji: '✨', name: 'Fairy' },
+  { key: 'wizard', emoji: '🧙', name: 'Wizard' },
+  { key: 'knight', emoji: '⚔️', name: 'Knight' },
+  { key: 'archer', emoji: '🏹', name: 'Archer' },
+  { key: 'elf', emoji: '🧝', name: 'Elf' },
+  { key: 'dwarf', emoji: '⛏️', name: 'Dwarf' },
 ];
 
 export default function HomePage() {
@@ -26,7 +25,7 @@ export default function HomePage() {
 
   const handleJoin = async () => {
     if (!displayName.trim()) {
-      setError('Por favor ingresa tu nombre');
+      setError('Please enter your name');
       return;
     }
 
@@ -41,7 +40,7 @@ export default function HomePage() {
       });
 
       if (!response.ok) {
-        throw new Error('Error al crear perfil');
+        throw new Error('Unable to create your profile');
       }
 
       const data = await response.json();
@@ -51,7 +50,7 @@ export default function HomePage() {
 
       router.push('/lobby');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error desconocido');
+      setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setIsLoading(false);
     }
@@ -61,39 +60,37 @@ export default function HomePage() {
     <Layout>
       <div className="min-h-screen flex flex-col items-center justify-center p-4">
         <div className="max-w-md w-full">
-          {/* Game Title */}
           <div className="text-center mb-12">
-            <h1 className="dungeon-title text-4xl mb-2">CONQUISTA</h1>
-            <h1 className="dungeon-title text-4xl mb-6">DEL CALABOZO</h1>
+            <h1 className="dungeon-title text-4xl mb-2">CONQUEST</h1>
+            <h1 className="dungeon-title text-4xl mb-6">OF THE DUNGEON</h1>
             <p className="dungeon-subtitle text-2xl mb-2">Medieval Fantasy Online</p>
             <div className="text-5xl mt-4">⚔️🏰</div>
           </div>
 
-          {/* Login Form */}
           <div className="dungeon-panel p-6 mb-6">
             <div className="mb-6">
               <Input
-                label="Nombre del Jugador"
+                label="Player name"
                 value={displayName}
                 onChange={(e) => {
                   setDisplayName(e.target.value);
                   setError('');
                 }}
-                placeholder="Tu nombre aventurero..."
+                placeholder="Your adventurer name..."
                 maxLength={50}
                 disabled={isLoading}
               />
             </div>
 
-            {/* Avatar Selection */}
             <div className="mb-6">
               <label className="block text-dungeon-text-secondary mb-3 uppercase text-sm font-bold">
-                Selecciona tu Clase
+                Choose your class
               </label>
               <div className="grid grid-cols-3 gap-2">
                 {AVATAR_CLASSES.map((avatar) => (
                   <button
                     key={avatar.key}
+                    type="button"
                     onClick={() => setSelectedAvatar(avatar.key)}
                     disabled={isLoading}
                     className={`p-3 border-2 transition-all text-center ${
@@ -121,15 +118,14 @@ export default function HomePage() {
               size="lg"
               className="w-full"
             >
-              {isLoading ? 'Creando Perfil...' : 'Entrar al Calabozo'}
+              {isLoading ? 'Creating profile...' : 'Enter the dungeon'}
             </Button>
           </div>
 
-          {/* Info Text */}
           <div className="text-center text-dungeon-text-secondary text-xs uppercase">
-            <p className="mb-2">⚡ Juego Multijugador en Tiempo Real</p>
-            <p className="mb-2">🎯 10 Etapas • 45 Minutos</p>
-            <p>👥 Equipos de 5 Jugadores</p>
+            <p className="mb-2">Real-time multiplayer</p>
+            <p className="mb-2">10 stages · 50 questions · 250 players</p>
+            <p>Auto teams of 5</p>
           </div>
         </div>
       </div>

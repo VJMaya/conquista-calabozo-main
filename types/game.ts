@@ -22,18 +22,23 @@ export interface GameTeam {
 
 export interface Question {
   id: string;
-  stageId: string;
-  questionType: 'multiple_choice' | 'short_text' | 'true_false';
+  stageId?: string;
+  stageNumber?: number;
+  questionType?: 'multiple_choice' | 'short_text' | 'true_false';
   questionText: string;
   optionA?: string;
   optionB?: string;
   optionC?: string;
   optionD?: string;
-  correctAnswer: string;
-  pointsBase: number;
-  difficulty: 'easy' | 'medium' | 'hard';
+  correctAnswer?: string;
+  pointsBase?: number;
+  difficulty?: 'easy' | 'medium' | 'hard' | string;
   explanation?: string;
   imageUrl?: string;
+  timeLimitSeconds?: number;
+  stageTitle?: string;
+  questionNumber?: number;
+  totalQuestions?: number;
 }
 
 export interface Stage {
@@ -71,4 +76,6 @@ export interface LeaderboardEntry {
   totalTimeSeconds: number;
   finalScore: number;
   currentStage: number;
+  completed?: boolean;
+  memberCount?: number;
 }

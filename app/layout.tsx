@@ -3,8 +3,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Conquista del Calabozo Online',
-  description: 'Medieval Fantasy Multiplayer Dungeon Game',
+  title: 'Conquest of the Dungeon',
+  description: 'Medieval fantasy multiplayer dungeon game',
 };
 
 export default function RootLayout({
@@ -13,7 +13,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es">
+    <html lang="en">
       <body>{children}</body>
     </html>
   );

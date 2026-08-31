@@ -38,7 +38,7 @@ const QuestionPanel: React.FC<QuestionPanelProps> = ({
       )}
 
       <div className="space-y-3 mb-6">
-        {question.questionType === 'multiple_choice' && (
+        {(question.questionType !== 'true_false') && (
           <>
             {['A', 'B', 'C', 'D'].map((letter) => {
               const optionKey = `option${letter}` as keyof Question;
@@ -87,7 +87,7 @@ const QuestionPanel: React.FC<QuestionPanelProps> = ({
         size="lg"
         className="w-full"
       >
-        {isLoading ? 'Enviando...' : 'Enviar Respuesta'}
+        {isLoading ? 'Submitting...' : 'Submit answer'}
       </Button>
     </div>
   );

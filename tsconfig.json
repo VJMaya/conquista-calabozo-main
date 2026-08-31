@@ -46,6 +46,7 @@
     "components",
     "lib",
     "types",
+    "data",
     ".next/types/**/*.ts"
   ],
   "exclude": [
