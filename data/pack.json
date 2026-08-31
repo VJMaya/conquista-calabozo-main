@@ -1,4 +1,13 @@
 {
+  "constants": {
+    "QUESTIONS_PER_STAGE": 5,
+    "TOTAL_STAGES": 10,
+    "TOTAL_QUESTIONS": 50,
+    "PLAYERS_PER_TEAM": 5,
+    "MAX_PLAYERS": 250,
+    "MAX_TEAMS": 50,
+    "MIN_PLAYERS_TO_START": 2
+  },
   "teamNames": [
     "Obsidian Dragons",
     "Golden Phoenix",

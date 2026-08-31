@@ -178,6 +178,32 @@ export function calculateTotalCompletionTime(team: RuntimeTeam): number {
   return team.totalTimeSeconds;
 }
 
+/**
+ * Team totals are derived from member aggregates, never incremented in place,
+ * so repeated calls stay idempotent.
+ */
+export function recalculateTeamTotals(
+  team: RuntimeTeam,
+  playersById: Map<string, RuntimePlayer>
+): RuntimeTeam {
+  let totalCorrect = 0;
+  let totalTimeSeconds = 0;
+  let finalScore = 0;
+
+  team.members.forEach((memberId) => {
+    const player = playersById.get(memberId);
+    if (!player) return;
+    totalCorrect += player.correctCount || 0;
+    totalTimeSeconds += player.totalTimeSeconds || 0;
+    finalScore += player.points || 0;
+  });
+
+  team.totalCorrect = totalCorrect;
+  team.totalTimeSeconds = totalTimeSeconds;
+  team.finalScore = finalScore;
+  return team;
+}
+
 export function publicQuestionPayload(questionIndex: number) {
   const question = getQuestionAtIndex(questionIndex);
   if (!question) return null;
@@ -297,13 +323,7 @@ export function completeTeamQuestionAndAdvance(
     applyTimeoutMisses(team, playersById, connectedMemberIds);
   }
 
-  const answers = Object.values(team.answersThisQuestion);
-  const correctThisQuestion = answers.filter((answer) => answer.isCorrect).length;
-  const timeThisQuestion = answers.reduce((sum, answer) => sum + answer.timeUsedSeconds, 0);
-
-  team.totalCorrect += correctThisQuestion;
-  team.totalTimeSeconds += timeThisQuestion;
-  team.finalScore = team.totalCorrect;
+  recalculateTeamTotals(team, playersById);
   team.currentQuestionIndex += 1;
 
   if (team.currentQuestionIndex >= TOTAL_QUESTIONS) {
