@@ -1,6 +1,7 @@
 'use client';
 
 import PlayerQuestionProgressBar from '@/components/game/PlayerQuestionProgressBar';
+import { RPGHeroPortrait } from '@/components/game/BattleCharacter';
 import type { BattleMember } from '@/types/battle';
 import './battle-arena.css';
 
@@ -35,15 +36,10 @@ export default function BattleRoster({
         return (
           <div
             key={member.id}
-            className={`min-w-[150px] flex-1 border-2 p-2 ${
-              isCurrent ? 'border-[#d4af37] bg-[#141829]' : 'border-[#1a1408] bg-[#1a1f3a]'
-            }`}
+            className={`battle-roster-member min-w-[150px] flex-1 p-2 ${isCurrent ? 'is-current' : ''}`}
           >
             <div className="mb-2 flex items-center gap-2">
-              <div className={`px-hero battle-pixel ${CLASS_LABELS[member.avatarKey] ? member.avatarKey : 'knight'} scale-75 origin-left`} aria-hidden>
-                <div className="px-hero-head" />
-                <div className="px-hero-body" />
-              </div>
+              <RPGHeroPortrait avatarKey={member.avatarKey} compact />
               <div className="min-w-0">
                 <p className="truncate text-xs font-black uppercase text-[#e0e6ff]">{member.displayName}</p>
                 <p className="text-[10px] uppercase tracking-wide text-[#8892b0]">{klass}</p>

@@ -92,26 +92,26 @@ export default function BattleBoss({
       <p className="mt-1 text-center text-[10px] italic leading-snug text-[#8892b0]">
         {phaseMeta.description}
       </p>
-      <p className="mb-2 mt-3 text-center text-[10px] font-black uppercase tracking-[0.22em] text-[#d4af37] sm:text-xs">
-        VORTHAK THE ANCIENT
-      </p>
       <div
-        className="mb-3 h-4 w-full overflow-hidden border-[3px] border-[#1a1408] bg-[#0a0e27]"
-        style={{ boxShadow: 'inset 0 0 0 2px #d4af37' }}
+        className="boss-health-frame"
         role="meter"
         aria-label="Vorthak health"
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={Math.round(health)}
       >
+        <span className="boss-health-name">VORTHAK THE ANCIENT</span>
+        <span className="boss-health-ornament left" aria-hidden />
+        <span className="boss-health-ornament right" aria-hidden />
         <div
-          className="h-full bg-[#c41e3a]"
-          style={{
-            width: `${health}%`,
-            backgroundImage:
-              'repeating-linear-gradient(90deg, rgba(255,255,255,0.12) 0 2px, transparent 2px 4px)',
-          }}
-        />
+          className="boss-health-track"
+          aria-hidden
+        >
+          <span
+            className="boss-health-fill"
+            style={{ width: `${health}%` }}
+          />
+        </div>
       </div>
 
       {imageFailed ? (

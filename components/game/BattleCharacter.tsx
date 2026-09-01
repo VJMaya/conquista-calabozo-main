@@ -20,6 +20,41 @@ interface BattleCharacterProps {
   reducedMotion?: boolean;
 }
 
+interface RPGHeroPortraitProps {
+  avatarKey: string;
+  compact?: boolean;
+  className?: string;
+}
+
+export function RPGHeroPortrait({
+  avatarKey,
+  compact = false,
+  className = '',
+}: RPGHeroPortraitProps) {
+  const klass = CLASS_LABELS[avatarKey] ? avatarKey : 'knight';
+
+  return (
+    <div
+      className={`rpg-hero ${klass} ${compact ? 'is-compact' : ''} ${className}`}
+      aria-hidden
+    >
+      <span className="rpg-hero-aura" />
+      <span className="rpg-hero-shadow" />
+      <span className="rpg-hero-cape" />
+      <span className="rpg-hero-wings" />
+      <span className="rpg-hero-hat" />
+      <span className="rpg-hero-ears" />
+      <span className="rpg-hero-head">
+        <span className="rpg-hero-hair" />
+        <span className="rpg-hero-face" />
+      </span>
+      <span className="rpg-hero-body" />
+      <span className="rpg-hero-weapon" />
+      <span className="rpg-hero-class-mark" />
+    </div>
+  );
+}
+
 export default function BattleCharacter({
   displayName,
   avatarKey,
@@ -39,16 +74,14 @@ export default function BattleCharacter({
           : '';
 
   return (
-    <div className="flex flex-col items-center gap-1" data-attack-style={attackStyle}>
+    <div className="battle-character" data-attack-style={attackStyle}>
       <div
-        className={`px-hero battle-pixel ${klass} ${motionClass} ${isCurrentUser ? 'is-current' : ''}`}
+        className={`battle-hero-motion ${motionClass} ${isCurrentUser ? 'is-current' : ''}`}
         title={`${displayName} (${CLASS_LABELS[klass] || 'Adventurer'})`}
-        aria-hidden
       >
-        <div className="px-hero-head" />
-        <div className="px-hero-body" />
+        <RPGHeroPortrait avatarKey={klass} />
       </div>
-      <p className="max-w-[72px] truncate text-center text-[10px] font-bold uppercase tracking-wide text-[#e0e6ff]">
+      <p className="battle-character-name">
         {displayName}
       </p>
     </div>

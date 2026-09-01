@@ -110,7 +110,7 @@ export default function BattleQuestionPanel({
         <p className="text-sm font-black uppercase">
           {remainingSeconds} {remainingSeconds === 1 ? 'Second' : 'Seconds'} Remaining
         </p>
-        <div className="mt-2 h-5 overflow-hidden border-2 border-[#d4af37] bg-[#0a0e27]">
+        <div className="battle-timer-track mt-2">
           <div className={`h-full ${timerClass}`} style={{ width: `${timerPercent}%` }} />
         </div>
       </div>
@@ -122,10 +122,10 @@ export default function BattleQuestionPanel({
             type="button"
             disabled={answered}
             onClick={() => setSelected(option.letter)}
-            className={`min-h-[48px] border-2 px-3 py-3 text-left font-bold uppercase ${
+            className={`battle-answer min-h-[48px] px-3 py-3 text-left font-bold uppercase ${
               selected === option.letter
-                ? 'border-[#d4af37] bg-[#d4af37] text-[#0a0e27]'
-                : 'border-[#8892b0] bg-[#141829] text-[#e0e6ff]'
+                ? 'is-selected'
+                : ''
             }`}
           >
             {option.letter}) {option.text}

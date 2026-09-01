@@ -351,11 +351,11 @@ export default function GamePage() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-[#0a0e27]">
+      <div className="min-h-screen bg-[#0b0a0d]">
         <div className="sr-only" aria-live="polite">
           {answeredCount} of {memberCount} members answered
         </div>
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-3 py-2 opacity-70 transition-opacity hover:opacity-100 focus-within:opacity-100">
+        <div className="battle-page-hud mx-auto flex max-w-6xl items-center justify-between gap-3 px-3 py-2">
           <p className="dungeon-title text-sm sm:text-base">Conquest of the Dungeon</p>
           <div className="flex gap-2">
             <Button
