@@ -82,7 +82,7 @@ export default function FinalPage() {
         <div className="min-h-screen p-6 flex flex-col items-center justify-center text-center">
           <h1 className="dungeon-title text-4xl mb-4">Final Chamber</h1>
           <p className="dungeon-subtitle mb-6 max-w-lg">
-            The final screen appears when every team has finished all 50 questions, or when the
+            The final screen appears when every team has finished all 30 questions, or when the
             admin ends the game.
           </p>
           <div className="flex gap-3">

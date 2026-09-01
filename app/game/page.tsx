@@ -5,11 +5,16 @@ import { useRouter } from 'next/navigation';
 import { io, Socket } from 'socket.io-client';
 import Layout from '@/components/Layout';
 import Button from '@/components/ui/Button';
-import Card from '@/components/ui/Card';
-import QuestionPanel from '@/components/game/QuestionPanel';
+import BattleArena from '@/components/game/BattleArena';
 import LeaderboardPanel from '@/components/game/LeaderboardPanel';
-import PlayerCard from '@/components/game/PlayerCard';
+import {
+  BattleAnimationQueue,
+  buildAnimKey,
+  createBattleAnimEvent,
+} from '@/lib/battle-animation';
+import type { BattleAnimEvent, BattleMember } from '@/types/battle';
 import { LeaderboardEntry, Player, Question } from '@/types/game';
+import { TOTAL_QUESTIONS, TOTAL_STAGES } from '@/data/pack';
 
 interface PublicQuestion extends Question {
   questionNumber?: number;
@@ -21,12 +26,17 @@ interface PublicQuestion extends Question {
   timeLimitSeconds: number;
 }
 
+interface TeamMember extends Player {
+  answeredCount?: number;
+  correctCount?: number;
+}
+
 interface TeamState {
   id?: string;
   teamId?: string;
   name?: string;
   teamName?: string;
-  members: Player[];
+  members: TeamMember[];
   totalCorrect?: number;
   totalTimeSeconds?: number;
   finalScore?: number;
@@ -42,11 +52,6 @@ interface AnswerFeedback {
   userAnswer?: string;
 }
 
-const TOTAL_QUESTIONS = 50;
-const TOTAL_STAGES = 10;
-const MAX_TEAMS = 50;
-const STAGE_RULE = '═══════════════════════════';
-
 function resolveTeamId(team: TeamState | null) {
   return team?.id || team?.teamId || '';
 }
@@ -55,17 +60,37 @@ function resolveTeamName(team: TeamState | null) {
   return team?.name || team?.teamName || 'Unassigned team';
 }
 
-function GoldRule() {
-  return (
-    <p className="overflow-hidden text-center font-bold tracking-[0.18em] text-[#d4af37] sm:tracking-[0.35em]">
-      {STAGE_RULE}
-    </p>
+function toBattleMembers(members: TeamMember[] | undefined): BattleMember[] {
+  return (members || []).slice(0, 5).map((member) => ({
+    id: member.id,
+    displayName: member.displayName,
+    avatarKey: member.avatarKey,
+    isConnected: member.isConnected !== false,
+    answeredCount: member.answeredCount || 0,
+    correctCount: member.correctCount || 0,
+  }));
+}
+
+function patchMemberStats(
+  members: TeamMember[],
+  memberId: string,
+  nextAnsweredCount: number,
+  nextCorrectCount: number
+): TeamMember[] {
+  return members.map((member) =>
+    member.id === memberId
+      ? { ...member, answeredCount: nextAnsweredCount, correctCount: nextCorrectCount }
+      : member
   );
 }
 
 export default function GamePage() {
   const router = useRouter();
   const socketRef = useRef<Socket | null>(null);
+  const userIdRef = useRef('');
+  const questionIdRef = useRef('');
+  const queueRef = useRef<BattleAnimationQueue | null>(null);
+
   const [userId, setUserId] = useState('');
   const [question, setQuestion] = useState<PublicQuestion | null>(null);
   const [remainingSeconds, setRemainingSeconds] = useState(0);
@@ -78,6 +103,28 @@ export default function GamePage() {
   const [answered, setAnswered] = useState(false);
   const [answeredCount, setAnsweredCount] = useState(0);
   const [memberCount, setMemberCount] = useState(0);
+  const [activeAnim, setActiveAnim] = useState<BattleAnimEvent | null>(null);
+
+  useEffect(() => {
+    userIdRef.current = userId;
+  }, [userId]);
+
+  useEffect(() => {
+    questionIdRef.current = question?.id || '';
+  }, [question?.id]);
+
+  useEffect(() => {
+    const queue = new BattleAnimationQueue();
+    queueRef.current = queue;
+    const unsubscribe = queue.subscribe((event) => {
+      setActiveAnim(event);
+    });
+    return () => {
+      unsubscribe();
+      queue.dispose();
+      queueRef.current = null;
+    };
+  }, []);
 
   useEffect(() => {
     const displayName = localStorage.getItem('displayName');
@@ -90,6 +137,7 @@ export default function GamePage() {
     }
 
     setUserId(storedUserId);
+    userIdRef.current = storedUserId;
 
     const socket = io();
     socketRef.current = socket;
@@ -107,6 +155,7 @@ export default function GamePage() {
       if (data.userId) {
         localStorage.setItem('userId', data.userId);
         setUserId(data.userId);
+        userIdRef.current = data.userId;
       }
     });
 
@@ -142,7 +191,10 @@ export default function GamePage() {
       pointsAwarded: number;
       correctAnswer: string;
       userAnswer?: string;
+      answeredCount?: number;
+      correctCount?: number;
     }) => {
+      const currentUserId = userIdRef.current;
       setAnswered(true);
       setWaitingForTeam(true);
       setFeedback({
@@ -151,6 +203,73 @@ export default function GamePage() {
         correctAnswer: data.correctAnswer,
         userAnswer: data.userAnswer,
       });
+
+      if (typeof data.answeredCount === 'number' && typeof data.correctCount === 'number') {
+        setTeam((current) =>
+          current
+            ? {
+                ...current,
+                members: patchMemberStats(
+                  current.members,
+                  currentUserId,
+                  data.answeredCount as number,
+                  data.correctCount as number
+                ),
+              }
+            : current
+        );
+      }
+
+      queueRef.current?.enqueue(
+        createBattleAnimEvent({
+          key: buildAnimKey(currentUserId, questionIdRef.current || 'q', 'result'),
+          userId: currentUserId,
+          avatarKey: avatarKey || 'knight',
+          isCorrect: data.isCorrect,
+          pointsAwarded: data.pointsAwarded,
+          kind: data.isCorrect ? 'success' : 'miss',
+          questionId: questionIdRef.current,
+        })
+      );
+    });
+
+    socket.on('team:member_answered', (data: {
+      userId: string;
+      avatarKey?: string;
+      isCorrect: boolean;
+      pointsAwarded: number;
+      answeredCount: number;
+      correctCount: number;
+    }) => {
+      setTeam((current) =>
+        current
+          ? {
+              ...current,
+              members: patchMemberStats(
+                current.members,
+                data.userId,
+                data.answeredCount,
+                data.correctCount
+              ),
+            }
+          : current
+      );
+
+      if (data.userId === userIdRef.current) {
+        return;
+      }
+
+      queueRef.current?.enqueue(
+        createBattleAnimEvent({
+          key: buildAnimKey(data.userId, questionIdRef.current || 'q', 'team'),
+          userId: data.userId,
+          avatarKey: data.avatarKey || 'knight',
+          isCorrect: data.isCorrect,
+          pointsAwarded: data.pointsAwarded,
+          kind: data.isCorrect ? 'success' : 'miss',
+          questionId: questionIdRef.current,
+        })
+      );
     });
 
     socket.on('team:answer_status', (data: { answeredCount?: number; memberCount?: number }) => {
@@ -218,253 +337,66 @@ export default function GamePage() {
   const teamName = resolveTeamName(team);
   const ownStanding = leaderboard.find((entry) => entry.teamId === teamId);
   const questionNumber = question?.questionNumber || 1;
-  const totalQuestions = question?.totalQuestions || TOTAL_QUESTIONS;
+  const totalQuestions = question?.totalQuestions ?? TOTAL_QUESTIONS;
   const stageNumber = question?.stageNumber || team?.currentStage || 1;
-  const questionProgress = Math.min(100, Math.round((questionNumber / totalQuestions) * 100));
-  const connectedMembers = memberCount || team?.members?.length || 0;
-  const answeredProgress = connectedMembers
-    ? Math.min(100, Math.round((answeredCount / connectedMembers) * 100))
-    : 0;
-  const timerPercent = question?.timeLimitSeconds
-    ? Math.max(0, Math.min(100, (remainingSeconds / question.timeLimitSeconds) * 100))
-    : 0;
-  const timerBarClass =
-    timerPercent > 50
-      ? 'bg-dungeon-green'
-      : timerPercent > 25
-        ? 'bg-yellow-400'
-        : 'bg-dungeon-red';
-  const timerTextClass =
-    timerPercent > 50
-      ? 'text-dungeon-green'
-      : timerPercent > 25
-        ? 'text-yellow-400'
-        : 'text-dungeon-red';
+  const battleMembers = useMemo(() => toBattleMembers(team?.members), [team?.members]);
 
-  const screenMode = useMemo(() => {
-    if (teamFinished) return 'completed';
-    if (waitingForTeam && answered) return 'waiting';
-    if (question) return 'playing';
-    return 'idle';
-  }, [teamFinished, waitingForTeam, answered, question]);
+  const teamTotalCorrect = team?.totalCorrect ?? ownStanding?.totalCorrect ?? 0;
+  const teamMemberCount = Math.max(1, battleMembers.length);
+  const maximumTeamCorrect = teamMemberCount * TOTAL_QUESTIONS;
+  const bossHealthPercent = Math.max(
+    0,
+    Math.min(100, 100 - (teamTotalCorrect / maximumTeamCorrect) * 100)
+  );
 
   return (
     <Layout>
-      <div className="min-h-screen bg-[#0a0e27] px-3 py-4 sm:px-6 sm:py-6 lg:px-8">
-        <div className="mx-auto max-w-6xl space-y-4 sm:space-y-5">
-          <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h1 className="dungeon-title text-2xl sm:text-3xl lg:text-4xl">
-                Conquest of the Dungeon
-              </h1>
-              <p className="dungeon-subtitle text-sm sm:text-base">{teamName}</p>
-            </div>
-            <div className="grid grid-cols-2 gap-2 sm:flex">
-              <Button variant="secondary" type="button" onClick={() => router.push('/ranking')}>
-                Ranking
-              </Button>
-              <Button
-                variant="secondary"
-                type="button"
-                onClick={() => setShowLeaderboard((value) => !value)}
-              >
-                {showLeaderboard ? 'Hide board' : 'Leaderboard'}
-              </Button>
-            </div>
-          </header>
-
-          <section className="dungeon-panel overflow-hidden bg-[#1a1f3a] px-4 py-5 text-center sm:px-8 sm:py-7">
-            <GoldRule />
-            <p className="dungeon-title mt-3 text-xl tracking-[0.25em] sm:text-3xl sm:tracking-[0.35em]">
-              STAGE {stageNumber} OF {TOTAL_STAGES}
-            </p>
-            <h2 className="mt-2 text-xl font-black uppercase leading-tight text-[#e0e6ff] sm:text-3xl">
-              {question?.stageTitle || 'Awaiting the next chamber'}
-            </h2>
-            <GoldRule />
-            <p className="mx-auto mt-3 max-w-2xl text-sm italic text-[#8892b0] sm:text-base">
-              {question?.stageDescription || 'The dungeon waits in silence.'}
-            </p>
-          </section>
-
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-6">
-            <div className="space-y-4 lg:col-span-2">
-              {screenMode === 'completed' && (
-                <div className="dungeon-panel border-[#d4af37] bg-[#141829] px-5 py-8 text-center sm:px-10">
-                  <p className="dungeon-title text-3xl sm:text-4xl">🏆 MISSION COMPLETED</p>
-                  <p className="mt-4 text-lg font-bold text-[#e0e6ff]">Team: {teamName}</p>
-                  <p className="mt-2 text-base text-[#e0e6ff]">
-                    Correct Answers: {ownStanding?.totalCorrect ?? team?.totalCorrect ?? 0}
-                  </p>
-                  <p className="mt-1 text-base text-[#d4af37]">
-                    Current Rank: #{ownStanding?.rank || '—'}
-                  </p>
-                  <p className="mt-6 text-sm uppercase tracking-[0.2em] text-[#8892b0]">
-                    Waiting for remaining teams...
-                  </p>
-                </div>
-              )}
-
-              {screenMode === 'waiting' && (
-                <Card>
-                  <p className="text-center text-xs uppercase tracking-[0.28em] text-[#d4af37]">
-                    Waiting for teammates
-                  </p>
-                  <h2 className="dungeon-title mt-3 text-center text-2xl sm:text-3xl">
-                    Answer locked in
-                  </h2>
-                  <p className="mt-3 text-center text-[#8892b0]">
-                    Your party advances when every connected member answers or the timer expires.
-                  </p>
-                </Card>
-              )}
-
-              {screenMode === 'playing' && question && (
-                <>
-                  <div className="dungeon-panel bg-[#141829] px-4 py-6 text-center sm:px-8">
-                    <p className={`text-lg font-black uppercase tracking-wide ${timerTextClass}`}>
-                      {remainingSeconds} {remainingSeconds === 1 ? 'Second' : 'Seconds'} Remaining
-                    </p>
-                    <div className="mx-auto mt-4 h-6 max-w-xl overflow-hidden border-2 border-[#d4af37] bg-[#0a0e27] sm:h-8">
-                      <div
-                        className={`h-full transition-all duration-200 ${timerBarClass}`}
-                        style={{ width: `${timerPercent}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="dungeon-panel bg-[#1a1f3a] p-4 sm:p-6">
-                    <p className="mb-4 text-center text-xs uppercase tracking-[0.28em] text-[#d4af37]">
-                      Question {questionNumber} of {totalQuestions}
-                    </p>
-                    <p className="mb-6 text-2xl font-black leading-snug text-[#e0e6ff] sm:text-3xl">
-                      {question.questionText}
-                    </p>
-                    <div className="[&_.dungeon-title]:hidden [&_p.text-lg]:hidden [&>div]:border-0 [&>div]:bg-transparent [&>div]:p-0">
-                      <QuestionPanel
-                        key={question.id}
-                        question={question}
-                        onSubmit={submitAnswer}
-                        isDisabled={answered}
-                      />
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {screenMode === 'idle' && (
-                <Card>
-                  <h2 className="dungeon-title text-2xl">Waiting for the next question</h2>
-                  <p className="mt-3 text-[#8892b0]">
-                    Stay connected. Your team advances on its own as soon as everyone answers or
-                    time runs out.
-                  </p>
-                </Card>
-              )}
-
-              {feedback && (
-                <div
-                  className={`border-2 px-5 py-6 text-center ${
-                    feedback.isCorrect
-                      ? 'border-dungeon-green bg-[#10261a]'
-                      : 'border-dungeon-red bg-[#2a1216]'
-                  }`}
-                >
-                  {feedback.isCorrect ? (
-                    <>
-                      <p className="text-2xl font-black uppercase tracking-[0.2em] text-dungeon-green sm:text-3xl">
-                        ✅ CORRECT
-                      </p>
-                      <p className="mt-3 text-xl font-black text-[#d4af37] sm:text-2xl">
-                        +{feedback.pointsAwarded} POINTS
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <p className="text-2xl font-black uppercase tracking-[0.2em] text-dungeon-red sm:text-3xl">
-                        ❌ INCORRECT
-                      </p>
-                      <p className="mt-3 text-lg font-bold text-[#e0e6ff]">
-                        Correct Answer: {feedback.correctAnswer}
-                      </p>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-
-            <aside className="space-y-4">
-              <div className="dungeon-panel bg-[#141829] p-4 text-center sm:p-5">
-                <p className="text-xs uppercase tracking-[0.28em] text-[#d4af37]">🏆 TEAM RANK</p>
-                <p className="dungeon-title mt-2 text-4xl sm:text-5xl">
-                  #{ownStanding?.rank || '—'}
-                </p>
-                <p className="mt-1 text-sm font-bold uppercase tracking-[0.2em] text-[#8892b0]">
-                  OF {MAX_TEAMS}
-                </p>
-              </div>
-
-              <div className="dungeon-panel bg-[#1a1f3a] p-4 sm:p-5">
-                <p className="text-center text-xs uppercase tracking-[0.28em] text-[#d4af37]">
-                  QUESTION PROGRESS
-                </p>
-                <div className="mt-4 h-5 overflow-hidden border-2 border-[#d4af37] bg-[#0a0e27]">
-                  <div
-                    className="h-full bg-[#d4af37] transition-all duration-300"
-                    style={{ width: `${questionProgress}%` }}
-                  />
-                </div>
-                <p className="mt-3 text-center text-sm font-bold uppercase tracking-wide">
-                  Question {questionNumber} / {totalQuestions}
-                </p>
-              </div>
-
-              <div className="dungeon-panel bg-[#1a1f3a] p-4 sm:p-5">
-                <p className="text-center text-xs uppercase tracking-[0.28em] text-[#d4af37]">
-                  TEAM STATUS
-                </p>
-                <p className="mt-3 text-center text-sm uppercase text-[#8892b0]">Members Answered</p>
-                <p className="mt-1 text-center text-3xl font-black text-[#e0e6ff]">
-                  {answeredCount} / {connectedMembers}
-                </p>
-                <div className="mt-4 h-4 overflow-hidden border-2 border-[#d4af37] bg-[#0a0e27]">
-                  <div
-                    className="h-full bg-dungeon-green transition-all duration-300"
-                    style={{ width: `${answeredProgress}%` }}
-                  />
-                </div>
-              </div>
-
-              <Card>
-                <h3 className="dungeon-title text-lg">{teamName}</h3>
-                <div className="mt-4 space-y-3">
-                  {(team?.members || []).map((member) => {
-                    const connected = member.isConnected !== false;
-                    return (
-                      <div key={member.id}>
-                        <PlayerCard
-                          player={{ ...member, isConnected: connected }}
-                          isCurrentUser={member.id === userId}
-                        />
-                        <p
-                          className={`mt-1 text-xs font-bold uppercase tracking-wide ${
-                            connected ? 'text-dungeon-green' : 'text-dungeon-red'
-                          }`}
-                        >
-                          {connected ? '🟢 Connected' : '🔴 Disconnected'}
-                        </p>
-                      </div>
-                    );
-                  })}
-                </div>
-              </Card>
-
-              {showLeaderboard && (
-                <LeaderboardPanel entries={leaderboard} currentUserTeamId={teamId} />
-              )}
-            </aside>
+      <div className="min-h-screen bg-[#0a0e27]">
+        <div className="sr-only" aria-live="polite">
+          {answeredCount} of {memberCount} members answered
+        </div>
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-3 py-3">
+          <p className="dungeon-title text-lg sm:text-2xl">Conquest of the Dungeon</p>
+          <div className="flex gap-2">
+            <Button variant="secondary" type="button" onClick={() => router.push('/ranking')}>
+              Ranking
+            </Button>
+            <Button
+              variant="secondary"
+              type="button"
+              onClick={() => setShowLeaderboard((value) => !value)}
+            >
+              {showLeaderboard ? 'Hide board' : 'Leaderboard'}
+            </Button>
           </div>
         </div>
+
+        <BattleArena
+          currentUserId={userId}
+          teamName={teamName}
+          members={battleMembers}
+          question={question}
+          remainingSeconds={remainingSeconds}
+          answered={answered}
+          waitingForTeammates={waitingForTeam}
+          teamFinished={teamFinished}
+          currentRank={ownStanding?.rank}
+          stageNumber={stageNumber}
+          questionNumber={questionNumber}
+          totalQuestions={totalQuestions}
+          totalStages={TOTAL_STAGES}
+          feedback={feedback}
+          activeAnim={activeAnim}
+          bossHealthPercent={bossHealthPercent}
+          onSubmit={submitAnswer}
+          onOpenRanking={() => router.push('/ranking')}
+        />
+
+        {showLeaderboard && (
+          <div className="mx-auto max-w-6xl px-3 pb-6">
+            <LeaderboardPanel entries={leaderboard} currentUserTeamId={teamId} />
+          </div>
+        )}
       </div>
     </Layout>
   );

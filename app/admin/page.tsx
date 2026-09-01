@@ -7,6 +7,7 @@ import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import LeaderboardPanel from '@/components/game/LeaderboardPanel';
 import { LeaderboardEntry } from '@/types/game';
+import { TOTAL_QUESTIONS, TOTAL_STAGES } from '@/data/pack';
 
 interface AdminTeam {
   id: string;
@@ -26,8 +27,6 @@ interface FeedItem {
   text: string;
 }
 
-const TOTAL_QUESTIONS = 50;
-const TOTAL_STAGES = 10;
 const MAX_PLAYERS = 250;
 const MAX_FEED = 24;
 

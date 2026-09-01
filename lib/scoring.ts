@@ -33,7 +33,7 @@ export function calculateStageScore(individualPoints: number[]): number {
 /**
  * Calculate final team score with bonuses
  * @param totalStagePoints Sum of all stage points
- * @param completedAllStages Whether team completed all 10 stages
+ * @param completedAllStages Whether team completed all 3 stages
  * @param timeRemainingSeconds Time remaining when completed
  * @returns Final team score with bonuses
  */

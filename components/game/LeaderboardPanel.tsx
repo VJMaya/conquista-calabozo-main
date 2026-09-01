@@ -1,6 +1,7 @@
 // components/game/LeaderboardPanel.tsx
 import React from 'react';
 import { LeaderboardEntry } from '@/types/game';
+import { TOTAL_STAGES } from '@/data/pack';
 
 interface LeaderboardPanelProps {
   entries: LeaderboardEntry[];
@@ -33,7 +34,7 @@ const LeaderboardPanel: React.FC<LeaderboardPanelProps> = ({
                   {entry.teamName}
                 </p>
                 <p className="text-xs uppercase opacity-75">
-                  Stage {entry.currentStage}/10 • ✓ {entry.totalCorrect} · {entry.totalTimeSeconds}s
+                  Stage {entry.currentStage}/{TOTAL_STAGES} • ✓ {entry.totalCorrect} · {entry.totalTimeSeconds}s
                 </p>
               </div>
               <p className="font-bold text-lg">{entry.finalScore}</p>

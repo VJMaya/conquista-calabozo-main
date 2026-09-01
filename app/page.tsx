@@ -124,7 +124,7 @@ export default function HomePage() {
 
           <div className="text-center text-dungeon-text-secondary text-xs uppercase">
             <p className="mb-2">Real-time multiplayer</p>
-            <p className="mb-2">10 stages · 50 questions · 250 players</p>
+            <p className="mb-2">3 stages · 30 questions · 250 players</p>
             <p>Auto teams of 5</p>
           </div>
         </div>

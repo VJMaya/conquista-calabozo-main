@@ -6,9 +6,9 @@ export const GAME_LIMITS = {
   playersPerTeam: 5,
   maxTeams: 50,
   minPlayersToStart: 2,
-  totalStages: 10,
-  questionsPerStage: 5,
-  totalQuestions: 50,
+  totalStages: 3,
+  questionsPerStage: 10,
+  totalQuestions: 30,
 };
 
 export const SOCKET_EVENTS = {
