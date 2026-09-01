@@ -41,6 +41,7 @@ export interface RuntimePlayer {
   isConnected: boolean;
   isReady?: boolean;
   teamId?: string;
+  answeredCount: number;
   correctCount: number;
   totalTimeSeconds: number;
   points: number;
@@ -79,6 +80,7 @@ export interface PlayerStanding {
   avatarKey: string;
   teamId: string;
   teamName: string;
+  answeredCount: number;
   correctCount: number;
   totalTimeSeconds: number;
   points: number;
@@ -137,6 +139,7 @@ export function createRuntimePlayer(
     socketId: player.socketId,
     isConnected: player.isConnected ?? true,
     isReady: false,
+    answeredCount: 0,
     correctCount: 0,
     totalTimeSeconds: 0,
     points: 0,
@@ -271,6 +274,7 @@ export function recordPlayerAnswer(
     pointsAwarded: result.pointsAwarded,
   };
 
+  player.answeredCount = (player.answeredCount || 0) + 1;
   if (result.isCorrect) player.correctCount += 1;
   player.totalTimeSeconds += result.timeUsedSeconds;
   player.points += result.pointsAwarded;
@@ -282,9 +286,10 @@ export function applyTimeoutMisses(
   team: RuntimeTeam,
   playersById: Map<string, RuntimePlayer>,
   connectedMemberIds: string[]
-): void {
+): RuntimePlayer[] {
   const question = getQuestionAtIndex(team.currentQuestionIndex);
   const timeUsed = question?.timeLimitSeconds ?? 0;
+  const missedPlayers: RuntimePlayer[] = [];
 
   connectedMemberIds.forEach((memberId) => {
     if (team.answersThisQuestion[memberId]) return;
@@ -297,9 +302,13 @@ export function applyTimeoutMisses(
     };
     const player = playersById.get(memberId);
     if (player) {
+      player.answeredCount = (player.answeredCount || 0) + 1;
       player.totalTimeSeconds += miss.timeUsedSeconds;
+      missedPlayers.push(player);
     }
   });
+
+  return missedPlayers;
 }
 
 export function beginTeamQuestion(team: RuntimeTeam, now: number = Date.now()): RuntimeTeam {
@@ -318,10 +327,15 @@ export function completeTeamQuestionAndAdvance(
   connectedMemberIds: string[],
   timedOut: boolean,
   now: number = Date.now()
-): { team: RuntimeTeam; finished: boolean; nextQuestion: ReturnType<typeof publicQuestionPayload> } {
-  if (timedOut) {
-    applyTimeoutMisses(team, playersById, connectedMemberIds);
-  }
+): {
+  team: RuntimeTeam;
+  finished: boolean;
+  nextQuestion: ReturnType<typeof publicQuestionPayload>;
+  timeoutMisses: RuntimePlayer[];
+} {
+  const timeoutMisses = timedOut
+    ? applyTimeoutMisses(team, playersById, connectedMemberIds)
+    : [];
 
   recalculateTeamTotals(team, playersById);
   team.currentQuestionIndex += 1;
@@ -332,7 +346,7 @@ export function completeTeamQuestionAndAdvance(
     team.currentStage = TOTAL_STAGES;
     team.questionStartedAt = null;
     team.answersThisQuestion = {};
-    return { team, finished: true, nextQuestion: null };
+    return { team, finished: true, nextQuestion: null, timeoutMisses };
   }
 
   beginTeamQuestion(team, now);
@@ -340,6 +354,7 @@ export function completeTeamQuestionAndAdvance(
     team,
     finished: false,
     nextQuestion: publicQuestionPayload(team.currentQuestionIndex),
+    timeoutMisses,
   };
 }
 
@@ -383,6 +398,7 @@ export function buildPlayerStandings(
         avatarKey: player.avatarKey,
         teamId: player.teamId || '',
         teamName: team?.name || 'Unassigned',
+        answeredCount: player.answeredCount || 0,
         correctCount: player.correctCount,
         totalTimeSeconds: player.totalTimeSeconds,
         points: player.points,

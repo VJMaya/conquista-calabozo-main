@@ -8,6 +8,8 @@ export interface Player {
   socketId?: string;
   isConnected: boolean;
   isReady?: boolean;
+  answeredCount?: number;
+  correctCount?: number;
 }
 
 export interface GameTeam {

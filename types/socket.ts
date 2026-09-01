@@ -12,7 +12,14 @@ export interface ServerToClientEvents {
     id?: string;
     teamName?: string;
     name?: string;
-    members: Array<{ id: string; displayName: string; avatarKey: string; isConnected?: boolean }>;
+    members: Array<{
+      id: string;
+      displayName: string;
+      avatarKey: string;
+      isConnected?: boolean;
+      answeredCount?: number;
+      correctCount?: number;
+    }>;
     totalCorrect?: number;
     completed?: boolean;
   }) => void;
@@ -54,12 +61,24 @@ export interface ServerToClientEvents {
     timeUsed?: number;
     pointsAwarded: number;
     correctAnswer: string;
+    answeredCount?: number;
+    correctCount?: number;
   }) => void;
   'answer:status': (data: { playerName: string; isCorrect: boolean }) => void;
   'team:answer_status': (data: {
     teamId: string;
     answeredCount: number;
     memberCount: number;
+  }) => void;
+  'team:member_answered': (data: {
+    teamId: string;
+    userId: string;
+    displayName: string;
+    avatarKey: string;
+    isCorrect: boolean;
+    pointsAwarded: number;
+    answeredCount: number;
+    correctCount: number;
   }) => void;
   'leaderboard:update': (data: { entries: Array<Record<string, unknown>> }) => void;
   'leaderboard:show': (data: { entries: Array<Record<string, unknown>>; visible: boolean }) => void;
