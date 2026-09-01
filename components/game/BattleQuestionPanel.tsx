@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Button from '@/components/ui/Button';
 import type { BattleFeedback, BattleQuestion } from '@/types/battle';
+import './battle-arena.css';
 
 interface BattleQuestionPanelProps {
   question: BattleQuestion | null;
@@ -45,7 +46,7 @@ export default function BattleQuestionPanel({
 
   if (teamFinished) {
     return (
-      <section className="dungeon-panel bg-[#141829] p-5 text-center">
+      <section className="battle-panel p-5 text-center">
         <p className="dungeon-title text-2xl sm:text-4xl">DUNGEON CLEARED!</p>
         <p className="mt-3 text-lg font-bold uppercase">TEAM {teamName}</p>
         <p className="mt-4 text-xs uppercase tracking-[0.28em] text-[#d4af37]">Current Rank</p>
@@ -64,7 +65,7 @@ export default function BattleQuestionPanel({
 
   if (waitingForTeammates && answered) {
     return (
-      <section className="dungeon-panel bg-[#141829] p-5 text-center">
+      <section className="battle-panel p-5 text-center">
         <p className="text-xs uppercase tracking-[0.28em] text-[#d4af37]">Waiting for teammates</p>
         <h2 className="dungeon-title mt-2 text-2xl">Answer locked in</h2>
         {feedback && (
@@ -80,7 +81,7 @@ export default function BattleQuestionPanel({
 
   if (!question) {
     return (
-      <section className="dungeon-panel bg-[#141829] p-5 text-center">
+      <section className="battle-panel p-5 text-center">
         <p className="dungeon-title text-xl">Waiting for the next question</p>
       </section>
     );
@@ -94,7 +95,7 @@ export default function BattleQuestionPanel({
   ];
 
   return (
-    <section className="dungeon-panel bg-[#1a1f3a] p-4 sm:p-5">
+    <section className="battle-panel p-4 sm:p-5">
       <p className="text-center text-xs font-black uppercase tracking-[0.2em] text-[#d4af37]">
         To pass, answer the question!
       </p>

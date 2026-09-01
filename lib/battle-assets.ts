@@ -6,10 +6,10 @@
 export const BATTLE_ASSET_PATHS = {
   background: '/game-assets/backgrounds/dungeon-arena.webp',
   bosses: {
-    idle: '/game-assets/bosses/dragon-idle.png',
-    hit: '/game-assets/bosses/dragon-hit.png',
-    dodge: '/game-assets/bosses/dragon-idle.png',
-    defeated: '/game-assets/bosses/dragon-defeated.png',
+    idle: '/game-assets/bosses/dragon-idle.webp',
+    hit: '/game-assets/bosses/dragon-hit.webp',
+    dodge: '/game-assets/bosses/dragon-idle.webp',
+    defeated: '/game-assets/bosses/dragon-defeated.webp',
   },
   characters: {
     fairy: { idle: '/game-assets/characters/fairy-idle.webp', attack: '/game-assets/characters/fairy-attack.webp' },
@@ -27,3 +27,44 @@ export const BATTLE_ASSET_PATHS = {
 
 /** Phase 6B: always use CSS placeholders so missing files cannot break the arena. */
 export const USE_BATTLE_IMAGE_ASSETS = false;
+
+export type BossPhase = 1 | 2 | 3;
+
+/** Phase mapping is driven by the question number, not by boss health. */
+export function resolveBossPhase(questionNumber: number): BossPhase {
+  if (!Number.isFinite(questionNumber) || questionNumber <= 10) return 1;
+  if (questionNumber <= 20) return 2;
+  return 3;
+}
+
+export const BOSS_PHASE_CLASS: Record<BossPhase, string> = {
+  1: 'phase-i',
+  2: 'phase-ii',
+  3: 'phase-iii',
+};
+
+/** 0 = front line, 1 = mid line, 2 = back line. */
+export const FORMATION_ROW: Record<string, number> = {
+  knight: 0,
+  dwarf: 0,
+  wizard: 1,
+  archer: 1,
+  fairy: 2,
+  elf: 2,
+};
+
+export function formationRank(avatarKey: string): number {
+  const row = FORMATION_ROW[avatarKey];
+  return row === undefined ? 1 : row;
+}
+
+/** Melee classes take the front slots, casters the middle, support the back. */
+export function orderPartyForFormation<T extends { avatarKey: string }>(members: T[]): T[] {
+  return members
+    .map((member, index) => ({ member, index }))
+    .sort((a, b) => {
+      const rankDiff = formationRank(a.member.avatarKey) - formationRank(b.member.avatarKey);
+      return rankDiff !== 0 ? rankDiff : a.index - b.index;
+    })
+    .map((entry) => entry.member);
+}

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import type { BossVisualState } from '@/types/battle';
+import { BATTLE_ASSET_PATHS, resolveBossPhase } from '@/lib/battle-assets';
 import './battle-arena.css';
 
 interface BattleBossProps {
@@ -17,21 +18,21 @@ interface BattleBossProps {
 
 const PHASES = {
   1: {
-    src: '/game-assets/bosses/dragon-idle.webp',
+    src: BATTLE_ASSET_PATHS.bosses.idle,
     label: 'PHASE I',
     title: 'THE AWAKENING',
     description: 'Vorthak has awakened and watches the adventurers.',
     fx: 'phase-i',
   },
   2: {
-    src: '/game-assets/bosses/dragon-defeated.webp',
+    src: BATTLE_ASSET_PATHS.bosses.defeated,
     label: 'PHASE II',
     title: 'THE FALLEN KING',
     description: 'The dragon begins transforming and its power grows.',
     fx: 'phase-ii',
   },
   3: {
-    src: '/game-assets/bosses/dragon-hit.webp',
+    src: BATTLE_ASSET_PATHS.bosses.hit,
     label: 'PHASE III',
     title: 'THE FINAL BATTLE',
     description: 'Vorthak unleashes his full power.',
@@ -42,12 +43,6 @@ const PHASES = {
 function clampHealth(value: number) {
   if (!Number.isFinite(value)) return 100;
   return Math.max(0, Math.min(100, value));
-}
-
-function dragonPhase(questionNumber: number): 1 | 2 | 3 {
-  if (questionNumber <= 10) return 1;
-  if (questionNumber <= 20) return 2;
-  return 3;
 }
 
 export default function BattleBoss({
@@ -61,7 +56,7 @@ export default function BattleBoss({
 }: BattleBossProps) {
   const health = clampHealth(bossHealthPercent);
   const [imageFailed, setImageFailed] = useState(false);
-  const phase = dragonPhase(questionNumber);
+  const phase = resolveBossPhase(questionNumber);
   const phaseMeta = PHASES[phase];
 
   let motion: BossVisualState = 'idle';
@@ -75,6 +70,7 @@ export default function BattleBoss({
   useEffect(() => {
     setImageFailed(false);
   }, [src]);
+
   const motionClass = reducedMotion
     ? ''
     : motion === 'hit'
@@ -83,25 +79,30 @@ export default function BattleBoss({
         ? 'is-dodge'
         : 'is-idle';
   const clearedClass = teamFinished ? 'is-team-cleared' : '';
+  const showFx = !teamFinished && !imageFailed;
 
   return (
-    <div className="flex w-full max-w-[220px] flex-col items-center sm:max-w-[240px] lg:max-w-[260px]">
+    <div className="battle-boss-stage">
       <p className="text-center text-[10px] font-black uppercase tracking-[0.28em] text-[#d4af37]">
         {phaseMeta.label}
       </p>
-      <p className="mt-1 text-center text-xs font-black uppercase tracking-wide text-[#e0e6ff]">
+      <p className="mt-1 text-center text-xs font-black uppercase tracking-wide text-[#e0e6ff] sm:text-sm">
         {phaseMeta.title}
       </p>
       <p className="mt-1 text-center text-[10px] italic leading-snug text-[#8892b0]">
         {phaseMeta.description}
       </p>
-      <p className="mb-2 mt-3 text-center text-[10px] font-black uppercase tracking-[0.2em] text-[#d4af37]">
-        Vorthak the Ancient
+      <p className="mb-2 mt-3 text-center text-[10px] font-black uppercase tracking-[0.22em] text-[#d4af37] sm:text-xs">
+        VORTHAK THE ANCIENT
       </p>
       <div
         className="mb-3 h-4 w-full overflow-hidden border-[3px] border-[#1a1408] bg-[#0a0e27]"
         style={{ boxShadow: 'inset 0 0 0 2px #d4af37' }}
-        aria-hidden
+        role="meter"
+        aria-label="Vorthak health"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(health)}
       >
         <div
           className="h-full bg-[#c41e3a]"
@@ -124,31 +125,45 @@ export default function BattleBoss({
           <div className="px-boss-coil c3" />
         </div>
       ) : (
-        <div className={`dragon-frame ${phaseMeta.fx} ${motionClass} ${clearedClass}`} aria-hidden>
+        <div
+          className={`dragon-frame ${phaseMeta.fx} ${motionClass} ${clearedClass}`}
+          aria-hidden
+        >
+          <span className="dragon-aura" />
           <Image
             key={src}
             src={src}
             alt=""
             fill
-            sizes="(max-width: 640px) 180px, (max-width: 1024px) 220px, 260px"
-            className={`dragon-art object-contain ${motionClass} ${clearedClass}`}
+            sizes="(max-width: 767px) 45vw, (max-width: 1023px) 50vw, 55vw"
+            className={`dragon-art object-contain object-bottom ${motionClass} ${clearedClass}`}
             onError={() => setImageFailed(true)}
-            priority={false}
+            priority
           />
-          {phase === 1 && !teamFinished && (
+          {showFx && phase === 1 && (
             <>
               <span className="dragon-eye-glow left" />
               <span className="dragon-eye-glow right" />
             </>
           )}
-          {phase === 2 && !teamFinished && <span className="dragon-rune-glow" />}
-          {phase === 3 && !teamFinished && (
+          {showFx && phase === 2 && (
             <>
+              <span className="dragon-rune-glow" />
+              <span className="dragon-ember ember-soft e1" />
+              <span className="dragon-ember ember-soft e2" />
+              <span className="dragon-ember ember-soft e3" />
+            </>
+          )}
+          {showFx && phase === 3 && (
+            <>
+              <span className="dragon-wing-highlight left" />
+              <span className="dragon-wing-highlight right" />
               <span className="dragon-fire-glow" />
               <span className="dragon-fire-breath" />
               <span className="dragon-ember e1" />
               <span className="dragon-ember e2" />
               <span className="dragon-ember e3" />
+              <span className="dragon-ember e4" />
             </>
           )}
         </div>

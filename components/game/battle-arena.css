@@ -101,6 +101,348 @@
 .px-hero.dwarf .px-hero-body { background: #a34a28; }
 .px-hero.dwarf .px-hero-head { background: #e07a3a; }
 
+/* One continuous stage: dungeon scene on top, dialogue attached below. */
+.battle-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 3px solid #d4af37;
+  box-shadow:
+    inset 0 0 0 2px #120e06,
+    inset 0 0 90px rgba(0, 0, 0, 0.75),
+    0 10px 26px rgba(0, 0, 0, 0.6);
+  background: #0a0e27;
+}
+
+.battle-scene {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  min-height: 320px;
+  max-height: 58vh;
+}
+
+@media (min-width: 768px) {
+  .battle-scene {
+    aspect-ratio: 16 / 9;
+    min-height: 380px;
+    max-height: 56vh;
+  }
+}
+
+/* --- Generated dungeon fallback (used when the webp is absent) --- */
+.battle-scene-craft {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.dungeon-wall {
+  position: absolute;
+  inset: 0 0 38% 0;
+  background:
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.32) 0 2px, transparent 2px 40px),
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.28) 0 2px, transparent 2px 66px),
+    linear-gradient(180deg, #221d2e 0%, #2b2436 55%, #1b1726 100%);
+}
+
+.dungeon-arch {
+  position: absolute;
+  bottom: 38%;
+  border-radius: 50% 50% 0 0 / 62% 62% 0 0;
+  background: linear-gradient(180deg, #05060d 0%, #0c0f1c 60%, #10131f 100%);
+  box-shadow: inset 0 0 22px rgba(0, 0, 0, 0.9), 0 0 0 4px rgba(58, 48, 34, 0.55);
+}
+
+.dungeon-arch.a1 { left: 6%; width: 16%; height: 30%; }
+.dungeon-arch.a2 { left: 41%; width: 18%; height: 36%; }
+.dungeon-arch.a3 { right: 8%; width: 16%; height: 30%; }
+
+.dungeon-banner {
+  position: absolute;
+  top: 0;
+  width: 7%;
+  height: 30%;
+  background: linear-gradient(180deg, #7d1226 0%, #5a0d1c 70%, #3c0813 100%);
+  border-left: 2px solid rgba(212, 175, 55, 0.7);
+  border-right: 2px solid rgba(212, 175, 55, 0.7);
+  clip-path: polygon(0 0, 100% 0, 100% 82%, 50% 100%, 0 82%);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.55);
+}
+
+.dungeon-banner.b1 { left: 27%; }
+.dungeon-banner.b2 { right: 26%; }
+
+.dungeon-torch {
+  position: absolute;
+  bottom: 44%;
+  width: 8px;
+  height: 26px;
+  background: linear-gradient(180deg, #6b5320, #2c220e);
+  border: 2px solid #120e06;
+}
+
+.dungeon-torch.t1 { left: 24%; }
+.dungeon-torch.t2 { right: 23%; }
+
+.torch-flame {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  width: 16px;
+  height: 22px;
+  transform: translateX(-50%);
+  border-radius: 50% 50% 45% 45%;
+  background: radial-gradient(circle at 50% 70%, #fff2b8 0%, #ffb545 45%, rgba(255, 90, 0, 0.15) 78%, transparent 85%);
+  box-shadow: 0 0 34px 16px rgba(255, 150, 40, 0.28);
+  animation: torch-flicker 1.6s ease-in-out infinite;
+}
+
+.dungeon-floor {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 40%;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.55) 0 3px, transparent 3px),
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.35) 0 2px, transparent 2px 76px),
+    repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0 2px, transparent 2px 34px),
+    linear-gradient(180deg, #4a4038 0%, #332c26 45%, #1f1a17 100%);
+}
+
+/* --- Optional artwork layer; transparent when the file is missing --- */
+.battle-scene-photo {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background-image: url('/game-assets/backgrounds/dungeon-arena.webp');
+  background-size: cover;
+  background-position: center bottom;
+  background-repeat: no-repeat;
+}
+
+.battle-scene-fade {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background:
+    radial-gradient(88% 74% at 50% 55%, transparent 42%, rgba(6, 8, 20, 0.72) 100%),
+    linear-gradient(
+      180deg,
+      rgba(6, 8, 20, 0.55) 0%,
+      rgba(6, 8, 20, 0.08) 34%,
+      rgba(6, 8, 20, 0.14) 66%,
+      rgba(6, 8, 20, 0.6) 100%
+    );
+}
+
+.battle-scene-atmosphere {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  transition: background 400ms ease;
+}
+
+.battle-stage.phase-i .battle-scene-atmosphere {
+  background:
+    radial-gradient(78% 66% at 72% 42%, rgba(60, 140, 255, 0.26), transparent 72%),
+    linear-gradient(180deg, transparent 55%, rgba(60, 140, 255, 0.16) 100%);
+  animation: atmosphere-pulse 5s ease-in-out infinite;
+}
+
+.battle-stage.phase-ii .battle-scene-atmosphere {
+  background:
+    radial-gradient(80% 68% at 72% 44%, rgba(255, 130, 40, 0.28), transparent 72%),
+    linear-gradient(180deg, transparent 52%, rgba(255, 120, 30, 0.2) 100%);
+  animation: atmosphere-pulse 3.4s ease-in-out infinite;
+}
+
+.battle-stage.phase-iii .battle-scene-atmosphere {
+  background:
+    radial-gradient(84% 72% at 70% 46%, rgba(255, 60, 20, 0.34), transparent 74%),
+    linear-gradient(180deg, transparent 48%, rgba(255, 60, 15, 0.26) 100%);
+  animation: atmosphere-pulse 2.2s ease-in-out infinite;
+}
+
+.battle-stage.is-cleared .battle-scene-atmosphere {
+  background: radial-gradient(82% 70% at 70% 46%, rgba(120, 130, 160, 0.18), transparent 74%);
+  animation: none;
+}
+
+.battle-stage.phase-ii .torch-flame {
+  box-shadow: 0 0 40px 20px rgba(255, 120, 30, 0.34);
+}
+
+.battle-stage.phase-iii .torch-flame {
+  background: radial-gradient(circle at 50% 70%, #fff0c0 0%, #ff8a2b 45%, rgba(255, 50, 0, 0.2) 78%, transparent 85%);
+  box-shadow: 0 0 46px 22px rgba(255, 70, 20, 0.4);
+}
+
+@keyframes atmosphere-pulse {
+  0%, 100% { opacity: 0.72; }
+  50% { opacity: 1; }
+}
+
+@keyframes torch-flicker {
+  0%, 100% { opacity: 0.82; transform: translateX(-50%) scaleY(1); }
+  45% { opacity: 1; transform: translateX(-50%) scaleY(1.14); }
+  70% { opacity: 0.9; transform: translateX(-50%) scaleY(0.95); }
+}
+
+.scene-embers {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.scene-ember {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #ffc46b;
+  box-shadow: 0 0 8px #ff6a10;
+  animation: scene-ember-rise 4.2s linear infinite;
+}
+
+.scene-ember.s1 { left: 12%; bottom: 6%; animation-delay: 0s; }
+.scene-ember.s2 { left: 34%; bottom: 3%; animation-delay: 0.9s; }
+.scene-ember.s3 { left: 58%; bottom: 8%; animation-delay: 1.7s; }
+.scene-ember.s4 { left: 76%; bottom: 4%; animation-delay: 2.5s; }
+.scene-ember.s5 { left: 90%; bottom: 9%; animation-delay: 3.3s; }
+
+@keyframes scene-ember-rise {
+  0% { transform: translateY(0) translateX(0); opacity: 0; }
+  15% { opacity: 0.95; }
+  100% { transform: translateY(-180px) translateX(14px); opacity: 0; }
+}
+
+.battle-party {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.battle-party-slot {
+  position: absolute;
+  transform-origin: bottom center;
+  transform: translateX(-50%) scale(var(--depth, 1));
+}
+
+/* Ground contact shadow so the party stands on the floor. */
+.battle-party-slot::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  width: 54px;
+  height: 12px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.62) 0%, transparent 72%);
+  z-index: -1;
+}
+
+.battle-party-slot.slot-1 { left: 30%; bottom: 5%; --depth: 1.4; }
+.battle-party-slot.slot-2 { left: 16%; bottom: 9%; --depth: 1.3; }
+.battle-party-slot.slot-3 { left: 27%; bottom: 20%; --depth: 1.02; }
+.battle-party-slot.slot-4 { left: 11%; bottom: 23%; --depth: 0.95; }
+.battle-party-slot.slot-5 { left: 20%; bottom: 33%; --depth: 0.76; }
+
+@media (max-width: 767px) {
+  .battle-party-slot.slot-1 { left: 32%; --depth: 0.92; }
+  .battle-party-slot.slot-2 { left: 14%; --depth: 0.86; }
+  .battle-party-slot.slot-3 { left: 28%; --depth: 0.7; }
+  .battle-party-slot.slot-4 { left: 10%; --depth: 0.66; }
+  .battle-party-slot.slot-5 { left: 20%; bottom: 31%; --depth: 0.54; }
+}
+
+.battle-boss-anchor {
+  position: absolute;
+  right: 0;
+  top: 2%;
+  bottom: 2%;
+  z-index: 6;
+  display: flex;
+  width: 55%;
+  max-width: 680px;
+  align-items: flex-end;
+  justify-content: center;
+  pointer-events: none;
+}
+
+@media (max-width: 1023px) {
+  .battle-boss-anchor {
+    width: 50%;
+  }
+}
+
+@media (max-width: 767px) {
+  .battle-boss-anchor {
+    width: 45%;
+  }
+}
+
+.battle-boss-stage {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+}
+
+.battle-boss-anchor .battle-boss-stage {
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.battle-boss-anchor .dragon-frame {
+  flex: 1 1 auto;
+  min-height: 0;
+  aspect-ratio: auto;
+}
+
+/* --- RPG dialogue panel attached to the scene --- */
+.battle-dialogue {
+  position: relative;
+  z-index: 7;
+  border-top: 3px solid #d4af37;
+  background:
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.22) 0 2px, transparent 2px 58px),
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.18) 0 2px, transparent 2px 30px),
+    linear-gradient(180deg, #262032 0%, #1a1626 55%, #120f1c 100%);
+  box-shadow: inset 0 3px 0 rgba(212, 175, 55, 0.25), inset 0 0 40px rgba(0, 0, 0, 0.6);
+}
+
+.battle-panel {
+  background: transparent;
+}
+
+.battle-roster-strip {
+  opacity: 0.72;
+  transform: scale(0.94);
+  transform-origin: top left;
+  transition: opacity 200ms ease;
+}
+
+.battle-roster-strip:hover,
+.battle-roster-strip:focus-within {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .battle-scene-atmosphere,
+  .torch-flame,
+  .scene-ember {
+    animation: none !important;
+  }
+}
+
 .px-boss {
   width: 140px;
   height: 160px;
@@ -158,58 +500,95 @@
 
 .dragon-frame {
   position: relative;
-  width: min(100%, 220px);
+  width: 100%;
   aspect-ratio: 1;
+  isolation: isolate;
+}
+
+.dragon-aura {
+  pointer-events: none;
+  position: absolute;
+  inset: 6%;
+  border-radius: 46%;
+  z-index: 0;
 }
 
 .dragon-art {
+  z-index: 1;
   transition: opacity 280ms ease, transform 280ms ease, filter 280ms ease;
 }
 
-.dragon-art.is-idle {
-  animation: dragon-breathe 2.8s ease-in-out infinite;
+.dragon-frame.is-idle .dragon-art {
+  animation: dragon-breathe 3.2s ease-in-out infinite;
 }
 
-.dragon-art.is-hit {
+.dragon-frame.is-hit .dragon-art {
   animation: dragon-hit-pop 0.4s ease-out;
 }
 
-.dragon-art.is-dodge {
+.dragon-frame.is-dodge .dragon-art {
   animation: dragon-dodge 0.4s ease-out;
 }
 
-.dragon-art.is-team-cleared,
-.dragon-frame.is-team-cleared .dragon-art,
-.px-boss.is-team-cleared {
-  filter: grayscale(100%);
-  opacity: 0.4;
+.dragon-frame.phase-i .dragon-aura {
+  box-shadow: 0 0 28px 10px rgba(70, 160, 255, 0.28);
+  animation: phase-i-pulse 2.8s ease-in-out infinite;
 }
 
-.dragon-frame.phase-i .dragon-art.is-idle {
-  filter: drop-shadow(0 0 10px rgba(80, 180, 255, 0.45));
+.dragon-frame.phase-i .dragon-art.is-idle,
+.dragon-frame.phase-i .dragon-art {
+  filter: drop-shadow(0 0 14px rgba(80, 180, 255, 0.5));
+}
+
+.dragon-frame.phase-ii .dragon-aura {
+  box-shadow: 0 0 34px 14px rgba(255, 120, 30, 0.38);
+  animation: phase-ii-pulse 2.1s ease-in-out infinite;
 }
 
 .dragon-frame.phase-ii .dragon-art {
-  filter: drop-shadow(0 0 12px rgba(255, 140, 40, 0.55));
+  filter: drop-shadow(0 0 18px rgba(255, 140, 40, 0.72));
+}
+
+.dragon-frame.phase-iii .dragon-aura {
+  box-shadow: 0 0 40px 16px rgba(255, 50, 10, 0.42);
+  animation: phase-iii-pulse 1.4s ease-in-out infinite;
 }
 
 .dragon-frame.phase-iii .dragon-art {
-  filter: drop-shadow(0 0 16px rgba(255, 70, 20, 0.7));
+  filter: drop-shadow(0 0 22px rgba(255, 70, 20, 0.85));
 }
 
 .dragon-rune-glow {
   pointer-events: none;
   position: absolute;
   inset: 12%;
+  z-index: 2;
   border-radius: 50%;
   box-shadow: inset 0 0 24px rgba(255, 120, 20, 0.45), 0 0 18px rgba(255, 140, 40, 0.5);
   animation: rune-pulse 2.2s ease-in-out infinite;
 }
 
+.dragon-wing-highlight {
+  pointer-events: none;
+  position: absolute;
+  z-index: 2;
+  width: 28%;
+  height: 42%;
+  top: 18%;
+  border-radius: 50% 40% 60% 40%;
+  background: radial-gradient(circle, rgba(255, 170, 60, 0.45) 0%, transparent 72%);
+  filter: blur(1px);
+  animation: wing-flare 1.6s ease-in-out infinite;
+}
+
+.dragon-wing-highlight.left { left: 4%; }
+.dragon-wing-highlight.right { right: 4%; transform: scaleX(-1); }
+
 .dragon-fire-glow {
   pointer-events: none;
   position: absolute;
   inset: 8%;
+  z-index: 2;
   border-radius: 50%;
   box-shadow: 0 0 28px 8px rgba(255, 60, 0, 0.35);
 }
@@ -217,11 +596,12 @@
 .dragon-fire-breath {
   pointer-events: none;
   position: absolute;
-  left: 8%;
-  top: 42%;
-  width: 42%;
-  height: 18%;
-  background: linear-gradient(90deg, rgba(255, 220, 80, 0.85), rgba(255, 80, 0, 0.15) 70%, transparent);
+  left: 4%;
+  top: 40%;
+  z-index: 2;
+  width: 48%;
+  height: 20%;
+  background: linear-gradient(90deg, rgba(255, 220, 80, 0.9), rgba(255, 80, 0, 0.2) 70%, transparent);
   filter: blur(2px);
   transform-origin: right center;
   animation: fire-breath 0.7s ease-in-out infinite;
@@ -230,6 +610,7 @@
 .dragon-ember {
   pointer-events: none;
   position: absolute;
+  z-index: 3;
   width: 5px;
   height: 5px;
   border-radius: 50%;
@@ -238,9 +619,63 @@
   animation: ember-float 1.8s linear infinite;
 }
 
+.dragon-ember.ember-soft {
+  width: 4px;
+  height: 4px;
+  opacity: 0.7;
+  animation-duration: 2.4s;
+}
+
 .dragon-ember.e1 { left: 18%; bottom: 22%; animation-delay: 0s; }
 .dragon-ember.e2 { left: 28%; bottom: 18%; animation-delay: 0.4s; }
 .dragon-ember.e3 { left: 12%; bottom: 28%; animation-delay: 0.9s; }
+.dragon-ember.e4 { left: 38%; bottom: 24%; animation-delay: 1.2s; }
+
+.dragon-eye-glow {
+  pointer-events: none;
+  position: absolute;
+  z-index: 2;
+  width: 12%;
+  height: 8%;
+  border-radius: 50%;
+  background: radial-gradient(circle, #7ecbff 0%, rgba(40, 140, 255, 0) 70%);
+  box-shadow: 0 0 14px 4px rgba(90, 190, 255, 0.65);
+  animation: eye-pulse 2.8s ease-in-out infinite;
+}
+
+.dragon-eye-glow.left { top: 34%; left: 34%; }
+.dragon-eye-glow.right { top: 34%; right: 34%; }
+
+.dragon-frame.is-team-cleared .dragon-art,
+.px-boss.is-team-cleared {
+  filter: grayscale(100%);
+  opacity: 0.4;
+}
+
+.dragon-frame.is-team-cleared .dragon-aura,
+.dragon-frame.is-team-cleared .dragon-eye-glow,
+.dragon-frame.is-team-cleared .dragon-rune-glow,
+.dragon-frame.is-team-cleared .dragon-fire-glow,
+.dragon-frame.is-team-cleared .dragon-fire-breath,
+.dragon-frame.is-team-cleared .dragon-ember,
+.dragon-frame.is-team-cleared .dragon-wing-highlight {
+  display: none;
+}
+
+@keyframes phase-i-pulse {
+  0%, 100% { opacity: 0.45; transform: scale(0.96); }
+  50% { opacity: 0.95; transform: scale(1.04); }
+}
+
+@keyframes phase-ii-pulse {
+  0%, 100% { opacity: 0.5; transform: scale(0.97); }
+  50% { opacity: 1; transform: scale(1.06); }
+}
+
+@keyframes phase-iii-pulse {
+  0%, 100% { opacity: 0.55; transform: scale(0.98); }
+  50% { opacity: 1; transform: scale(1.08); }
+}
 
 @keyframes rune-pulse {
   0%, 100% { opacity: 0.45; }
@@ -257,18 +692,15 @@
   100% { transform: translateY(-28px); opacity: 0; }
 }
 
-.dragon-eye-glow {
-  pointer-events: none;
-  position: absolute;
-  width: 12%;
-  height: 8%;
-  border-radius: 50%;
-  background: radial-gradient(circle, #7ecbff 0%, rgba(40, 140, 255, 0.0) 70%);
-  box-shadow: 0 0 14px 4px rgba(90, 190, 255, 0.65);
+@keyframes eye-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
 }
 
-.dragon-eye-glow.left { top: 34%; left: 34%; }
-.dragon-eye-glow.right { top: 34%; right: 34%; }
+@keyframes wing-flare {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.85; }
+}
 
 @keyframes dragon-breathe {
   0%, 100% { transform: scale(1); }
@@ -287,12 +719,15 @@
 
 @media (prefers-reduced-motion: reduce) {
   .dragon-art,
-  .dragon-art.is-idle,
-  .dragon-art.is-hit,
-  .dragon-art.is-dodge,
+  .dragon-frame.is-idle .dragon-art,
+  .dragon-frame.is-hit .dragon-art,
+  .dragon-frame.is-dodge .dragon-art,
+  .dragon-aura,
   .dragon-rune-glow,
   .dragon-fire-breath,
-  .dragon-ember {
+  .dragon-ember,
+  .dragon-eye-glow,
+  .dragon-wing-highlight {
     animation: none !important;
     transform: none !important;
   }
@@ -329,10 +764,6 @@
 
 .battle-arena-bg {
   background:
-    linear-gradient(180deg, rgba(10, 14, 39, 0.35), rgba(10, 14, 39, 0.82)),
-    repeating-linear-gradient(
-      90deg,
-      #1a1f3a 0 16px,
-      #141829 16px 32px
-    );
+    radial-gradient(90% 60% at 50% 0%, rgba(42, 36, 64, 0.85), transparent 70%),
+    linear-gradient(180deg, #10142a 0%, #0a0e27 100%);
 }

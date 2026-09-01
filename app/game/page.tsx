@@ -355,14 +355,20 @@ export default function GamePage() {
         <div className="sr-only" aria-live="polite">
           {answeredCount} of {memberCount} members answered
         </div>
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-3 py-3">
-          <p className="dungeon-title text-lg sm:text-2xl">Conquest of the Dungeon</p>
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-3 py-2 opacity-70 transition-opacity hover:opacity-100 focus-within:opacity-100">
+          <p className="dungeon-title text-sm sm:text-base">Conquest of the Dungeon</p>
           <div className="flex gap-2">
-            <Button variant="secondary" type="button" onClick={() => router.push('/ranking')}>
+            <Button
+              variant="secondary"
+              size="sm"
+              type="button"
+              onClick={() => router.push('/ranking')}
+            >
               Ranking
             </Button>
             <Button
               variant="secondary"
+              size="sm"
               type="button"
               onClick={() => setShowLeaderboard((value) => !value)}
             >

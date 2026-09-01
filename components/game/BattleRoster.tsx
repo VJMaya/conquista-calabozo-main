@@ -27,7 +27,7 @@ export default function BattleRoster({
   const roster = members.slice(0, 5);
 
   return (
-    <aside className="flex max-h-40 gap-2 overflow-x-auto lg:max-h-none lg:flex-col lg:overflow-visible">
+    <aside className="battle-roster-strip flex gap-2 overflow-x-auto">
       {roster.map((member) => {
         const connected = member.isConnected !== false;
         const isCurrent = member.id === currentUserId;
@@ -35,7 +35,7 @@ export default function BattleRoster({
         return (
           <div
             key={member.id}
-            className={`min-w-[168px] flex-1 border-2 p-2 lg:min-w-0 ${
+            className={`min-w-[150px] flex-1 border-2 p-2 ${
               isCurrent ? 'border-[#d4af37] bg-[#141829]' : 'border-[#1a1408] bg-[#1a1f3a]'
             }`}
           >
