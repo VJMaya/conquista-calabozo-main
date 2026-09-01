@@ -25,6 +25,19 @@ export const BATTLE_ASSET_PATHS = {
   },
 } as const;
 
+export const HERO_PORTRAIT_PATHS: Record<string, string> = {
+  fairy: '/game-assets/characters/fairy-clean.png',
+  wizard: '/game-assets/characters/wizard-clean.png',
+  knight: '/game-assets/characters/knight-clean.png',
+  archer: '/game-assets/characters/archer-clean.png',
+  elf: '/game-assets/characters/elf-clean.png',
+  dwarf: '/game-assets/characters/dwarf-clean.png',
+};
+
+export function resolveHeroPortrait(avatarKey: string): string | null {
+  return HERO_PORTRAIT_PATHS[avatarKey] ?? null;
+}
+
 /** Phase 6B: always use CSS placeholders so missing files cannot break the arena. */
 export const USE_BATTLE_IMAGE_ASSETS = false;
 

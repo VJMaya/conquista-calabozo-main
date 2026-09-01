@@ -62,16 +62,16 @@
 }
 
 .battle-character-name {
-  max-width: 78px;
+  max-width: 88px;
   overflow: hidden;
-  color: #f4ead1;
-  font-size: 9px;
-  font-weight: 900;
-  letter-spacing: 0.08em;
+  color: rgba(244, 234, 209, 0.78);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   line-height: 1.1;
   text-align: center;
   text-overflow: ellipsis;
-  text-shadow: 0 2px 3px #000, 0 0 6px #000;
+  text-shadow: 0 1px 2px #000;
   text-transform: uppercase;
   white-space: nowrap;
 }
@@ -87,6 +87,69 @@
 
 .battle-hero-motion.is-attacking { animation: px-lunge 0.45s ease-out; }
 .battle-hero-motion.is-miss { animation: px-whiff 0.4s ease-out; }
+
+.hero-portrait {
+  --glow: rgba(212, 175, 55, 0.55);
+  position: relative;
+  width: 84px;
+  height: 116px;
+  transform-origin: bottom center;
+}
+
+.hero-portrait.is-compact {
+  width: 54px;
+  height: 74px;
+  flex: 0 0 54px;
+}
+
+.hero-portrait-art {
+  object-fit: contain;
+  object-position: center bottom;
+  pointer-events: none;
+  filter: drop-shadow(0 0 8px var(--glow));
+}
+
+.hero-portrait-glow {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: 8%;
+  height: 58%;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--glow), transparent 70%);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.hero-portrait-shadow {
+  position: absolute;
+  left: 16%;
+  right: 16%;
+  bottom: 1px;
+  height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.72) 0%, transparent 72%);
+  pointer-events: none;
+}
+
+.hero-portrait.fairy { --glow: rgba(160, 140, 255, 0.72); }
+.hero-portrait.wizard { --glow: rgba(120, 90, 255, 0.7); }
+.hero-portrait.knight { --glow: rgba(240, 204, 98, 0.72); }
+.hero-portrait.archer { --glow: rgba(92, 210, 110, 0.68); }
+.hero-portrait.elf { --glow: rgba(72, 230, 170, 0.7); }
+.hero-portrait.dwarf { --glow: rgba(255, 154, 76, 0.7); }
+
+.hero-portrait.is-fallback .rpg-hero {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%) scale(1.35);
+  transform-origin: bottom center;
+}
+
+.hero-portrait.is-compact.is-fallback .rpg-hero {
+  transform: translateX(-50%) scale(0.78);
+}
 
 /* Class-specific fantasy portraits used when character artwork is unavailable. */
 .rpg-hero {
@@ -770,12 +833,12 @@
   content: '';
   position: absolute;
   left: 50%;
-  bottom: 14px;
-  width: 54px;
-  height: 12px;
+  bottom: 10px;
+  width: 72px;
+  height: 16px;
   transform: translateX(-50%);
   border-radius: 50%;
-  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.62) 0%, transparent 72%);
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.72) 0%, transparent 72%);
   z-index: -1;
 }
 

@@ -1,7 +1,10 @@
 'use client';
 
+import { useState } from 'react';
+import Image from 'next/image';
 import type { CharacterVisualState } from '@/types/battle';
 import { resolveAttackStyle } from '@/lib/battle-animation';
+import { resolveHeroPortrait } from '@/lib/battle-assets';
 
 const CLASS_LABELS: Record<string, string> = {
   fairy: 'Fairy',
@@ -32,25 +35,26 @@ export function RPGHeroPortrait({
   className = '',
 }: RPGHeroPortraitProps) {
   const klass = CLASS_LABELS[avatarKey] ? avatarKey : 'knight';
+  const src = resolveHeroPortrait(klass);
+  const [failed, setFailed] = useState(!src);
 
   return (
     <div
-      className={`rpg-hero ${klass} ${compact ? 'is-compact' : ''} ${className}`}
+      className={`hero-portrait ${klass} ${compact ? 'is-compact' : ''} has-art ${className}`}
       aria-hidden
     >
-      <span className="rpg-hero-aura" />
-      <span className="rpg-hero-shadow" />
-      <span className="rpg-hero-cape" />
-      <span className="rpg-hero-wings" />
-      <span className="rpg-hero-hat" />
-      <span className="rpg-hero-ears" />
-      <span className="rpg-hero-head">
-        <span className="rpg-hero-hair" />
-        <span className="rpg-hero-face" />
-      </span>
-      <span className="rpg-hero-body" />
-      <span className="rpg-hero-weapon" />
-      <span className="rpg-hero-class-mark" />
+      <span className="hero-portrait-glow" />
+      <span className="hero-portrait-shadow" />
+      {!failed && src ? (
+        <Image
+          src={src}
+          alt=""
+          fill
+          sizes={compact ? '56px' : '140px'}
+          className="hero-portrait-art"
+          onError={() => setFailed(true)}
+        />
+      ) : null}
     </div>
   );
 }
