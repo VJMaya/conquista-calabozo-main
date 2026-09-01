@@ -4,7 +4,7 @@
  * components must never depend on those files existing.
  */
 export const BATTLE_ASSET_PATHS = {
-  background: '/game-assets/backgrounds/dungeon-arena.webp',
+  background: '/game-assets/backgrounds/dungeon-arena.png',
   bosses: {
     idle: '/game-assets/bosses/dragon-idle.webp',
     hit: '/game-assets/bosses/dragon-hit.webp',

@@ -1,6 +1,7 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import Image from 'next/image';
 import './battle-arena.css';
 import BattleBoss from '@/components/game/BattleBoss';
 import BattleCharacter from '@/components/game/BattleCharacter';
@@ -8,7 +9,12 @@ import BattleEffect from '@/components/game/BattleEffect';
 import BattleQuestionPanel from '@/components/game/BattleQuestionPanel';
 import BattleRoster from '@/components/game/BattleRoster';
 import { prefersReducedMotion } from '@/lib/battle-animation';
-import { BOSS_PHASE_CLASS, orderPartyForFormation, resolveBossPhase } from '@/lib/battle-assets';
+import {
+  BATTLE_ASSET_PATHS,
+  BOSS_PHASE_CLASS,
+  orderPartyForFormation,
+  resolveBossPhase,
+} from '@/lib/battle-assets';
 import type { BattleArenaProps, BossVisualState, CharacterVisualState } from '@/types/battle';
 import { TOTAL_QUESTIONS, TOTAL_STAGES } from '@/data/pack';
 
@@ -58,6 +64,7 @@ export default function BattleArena({
 
   const phase = resolveBossPhase(questionNumber);
   const phaseClass = BOSS_PHASE_CLASS[phase];
+  const [arenaBgFailed, setArenaBgFailed] = useState(false);
 
   return (
     <div className="battle-arena-bg flex min-h-screen flex-col overflow-x-hidden">
@@ -79,9 +86,32 @@ export default function BattleArena({
               </div>
               <div className="dungeon-floor" />
             </div>
-            <div className="battle-scene-photo" aria-hidden />
+            <div className="battle-scene-photo" aria-hidden>
+              {!arenaBgFailed && (
+                <Image
+                  src={BATTLE_ASSET_PATHS.background}
+                  alt=""
+                  fill
+                  priority
+                  sizes="(max-width: 1152px) 100vw, 1152px"
+                  className="battle-scene-photo-img"
+                  onError={() => setArenaBgFailed(true)}
+                />
+              )}
+            </div>
             <div className="battle-scene-atmosphere" aria-hidden />
             <div className="battle-scene-fade" aria-hidden />
+            <div className="dungeon-ambient" aria-hidden>
+              <span className="dungeon-fog fog-1" />
+              <span className="dungeon-fog fog-2" />
+              <span className="dungeon-dust dust-1" />
+              <span className="dungeon-dust dust-2" />
+              <span className="dungeon-dust dust-3" />
+              <span className="dungeon-dust dust-4" />
+              <span className="dungeon-mote mote-1" />
+              <span className="dungeon-mote mote-2" />
+              <span className="dungeon-mote mote-3" />
+            </div>
 
             {phase === 3 && !teamFinished && !reducedMotion && (
               <div className="scene-embers" aria-hidden>
