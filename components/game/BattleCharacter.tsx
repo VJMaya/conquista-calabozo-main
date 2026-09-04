@@ -84,6 +84,7 @@ export default function BattleCharacter({
         title={`${displayName} (${CLASS_LABELS[klass] || 'Adventurer'})`}
       >
         <RPGHeroPortrait avatarKey={klass} />
+        <span className="hero-weapon-flash" aria-hidden />
       </div>
       <p className="battle-character-name">
         {displayName}

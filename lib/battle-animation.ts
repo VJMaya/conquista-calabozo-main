@@ -1,6 +1,6 @@
 import type { AttackStyle, BattleAnimEvent } from '@/types/battle';
 
-export const BATTLE_ANIM_MS = 620;
+export const BATTLE_ANIM_MS = 500;
 export const BATTLE_SEEN_LIMIT = 80;
 
 export function prefersReducedMotion(): boolean {

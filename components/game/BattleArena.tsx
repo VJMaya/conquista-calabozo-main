@@ -52,15 +52,21 @@ export default function BattleArena({
     return 'dodge';
   }, [activeAnim]);
 
+  const criticalHit =
+    Boolean(activeAnim?.isCorrect) &&
+    (activeAnim?.kind === 'critical' || (activeAnim?.pointsAwarded ?? 0) > 100);
+
   const effectKind = !activeAnim
     ? 'none'
     : activeAnim.kind === 'timeout'
       ? 'timeout'
-      : activeAnim.kind === 'critical'
+      : activeAnim.kind === 'critical' || (activeAnim.isCorrect && activeAnim.pointsAwarded > 100)
         ? 'critical'
         : activeAnim.kind === 'success'
           ? 'success'
-          : 'miss';
+          : activeAnim.kind === 'miss'
+            ? 'miss'
+            : 'miss';
 
   const phase = resolveBossPhase(questionNumber);
   const phaseClass = BOSS_PHASE_CLASS[phase];
@@ -111,15 +117,22 @@ export default function BattleArena({
               <span className="dungeon-mote mote-1" />
               <span className="dungeon-mote mote-2" />
               <span className="dungeon-mote mote-3" />
+              <span className="dungeon-mote mote-4" />
+              <span className="dungeon-mote mote-5" />
+              <span className="dungeon-mote mote-6" />
             </div>
 
-            {phase === 3 && !teamFinished && !reducedMotion && (
+            {!teamFinished && (
               <div className="scene-embers" aria-hidden>
                 <span className="scene-ember s1" />
                 <span className="scene-ember s2" />
                 <span className="scene-ember s3" />
                 <span className="scene-ember s4" />
                 <span className="scene-ember s5" />
+                <span className="scene-ember s6" />
+                <span className="scene-ash ash-1" />
+                <span className="scene-ash ash-2" />
+                <span className="scene-ash ash-3" />
               </div>
             )}
 
@@ -160,6 +173,7 @@ export default function BattleArena({
                 reducedMotion={reducedMotion}
                 activeHit={Boolean(activeAnim?.isCorrect)}
                 activeDodge={Boolean(activeAnim && !activeAnim.isCorrect)}
+                criticalHit={criticalHit}
                 questionNumber={questionNumber}
               />
             </div>

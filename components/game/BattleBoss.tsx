@@ -13,6 +13,7 @@ interface BattleBossProps {
   reducedMotion?: boolean;
   activeHit?: boolean;
   activeDodge?: boolean;
+  criticalHit?: boolean;
   questionNumber?: number;
 }
 
@@ -52,6 +53,7 @@ export default function BattleBoss({
   reducedMotion = false,
   activeHit = false,
   activeDodge = false,
+  criticalHit = false,
   questionNumber = 1,
 }: BattleBossProps) {
   const health = clampHealth(bossHealthPercent);
@@ -79,6 +81,8 @@ export default function BattleBoss({
         ? 'is-dodge'
         : 'is-idle';
   const clearedClass = teamFinished ? 'is-team-cleared' : '';
+  const critClass = criticalHit && motion === 'hit' ? 'is-crit' : '';
+  const dodgeDir = questionNumber % 2 === 0 ? 'is-dodge-left' : 'is-dodge-right';
   const showFx = !teamFinished && !imageFailed;
 
   return (
@@ -115,7 +119,7 @@ export default function BattleBoss({
       </div>
 
       {imageFailed ? (
-        <div className={`px-boss battle-pixel ${motionClass} ${clearedClass}`} aria-hidden>
+        <div className={`px-boss battle-pixel ${motionClass} ${critClass} ${motion === 'dodge' ? dodgeDir : ''} ${clearedClass}`} aria-hidden>
           <div className="px-boss-head">
             <span className="px-boss-eye l" />
             <span className="px-boss-eye r" />
@@ -126,7 +130,7 @@ export default function BattleBoss({
         </div>
       ) : (
         <div
-          className={`dragon-frame ${phaseMeta.fx} ${motionClass} ${clearedClass}`}
+          className={`dragon-frame ${phaseMeta.fx} ${motionClass} ${critClass} ${motion === 'dodge' ? dodgeDir : ''} ${clearedClass}`}
           aria-hidden
         >
           <span className="dragon-aura" />

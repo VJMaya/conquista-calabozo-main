@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import BattleArena from '@/components/game/BattleArena';
-import type { BattleMember } from '@/types/battle';
+import { BATTLE_ANIM_MS } from '@/lib/battle-animation';
+import type { BattleAnimEvent, BattleMember } from '@/types/battle';
 
 const MEMBERS: BattleMember[] = [
   { id: 'u1', displayName: 'Aldric', avatarKey: 'knight', isConnected: true, answeredCount: 7, correctCount: 5 },
@@ -14,10 +15,29 @@ const MEMBERS: BattleMember[] = [
 
 export default function ArenaPreviewPage() {
   const [questionNumber, setQuestionNumber] = useState(4);
+  const [activeAnim, setActiveAnim] = useState<BattleAnimEvent | null>(null);
+
+  useEffect(() => {
+    if (!activeAnim) return undefined;
+    const timer = window.setTimeout(() => setActiveAnim(null), BATTLE_ANIM_MS);
+    return () => window.clearTimeout(timer);
+  }, [activeAnim]);
+
+  const play = (kind: BattleAnimEvent['kind'], pointsAwarded: number, isCorrect: boolean) => {
+    setActiveAnim({
+      key: `${kind}-${Date.now()}`,
+      userId: 'u1',
+      avatarKey: 'knight',
+      isCorrect,
+      pointsAwarded,
+      kind,
+      questionId: 'q1',
+    });
+  };
 
   return (
     <div>
-      <div className="flex gap-2 p-2">
+      <div className="flex flex-wrap gap-2 p-2">
         {[4, 14, 24].map((value) => (
           <button
             key={value}
@@ -28,6 +48,34 @@ export default function ArenaPreviewPage() {
             Q{value}
           </button>
         ))}
+        <button
+          type="button"
+          className="border-2 border-[#d4af37] px-3 py-1 text-xs font-bold uppercase text-[#ffd24a]"
+          onClick={() => play('success', 100, true)}
+        >
+          Hit
+        </button>
+        <button
+          type="button"
+          className="border-2 border-[#d4af37] px-3 py-1 text-xs font-bold uppercase text-[#ffd24a]"
+          onClick={() => play('critical', 180, true)}
+        >
+          Crit
+        </button>
+        <button
+          type="button"
+          className="border-2 border-[#8892b0] px-3 py-1 text-xs font-bold uppercase text-[#c9d0dc]"
+          onClick={() => play('miss', 0, false)}
+        >
+          Miss
+        </button>
+        <button
+          type="button"
+          className="border-2 border-[#6b6574] px-3 py-1 text-xs font-bold uppercase text-[#9aa3b2]"
+          onClick={() => play('timeout', 0, false)}
+        >
+          Time out
+        </button>
       </div>
       <BattleArena
         currentUserId="u1"
@@ -55,7 +103,7 @@ export default function ArenaPreviewPage() {
         totalQuestions={30}
         totalStages={3}
         feedback={null}
-        activeAnim={null}
+        activeAnim={activeAnim}
         bossHealthPercent={62}
         onSubmit={() => undefined}
       />
