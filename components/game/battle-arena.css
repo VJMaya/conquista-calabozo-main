@@ -1286,6 +1286,8 @@
   width: 100%;
   aspect-ratio: 1;
   isolation: isolate;
+  transform: scaleX(-1);
+  transform-origin: center bottom;
 }
 
 .dragon-aura {
