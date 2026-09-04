@@ -40,9 +40,11 @@ export default function BattleArena({
   totalQuestions = TOTAL_QUESTIONS,
   totalStages = TOTAL_STAGES,
   feedback,
+  selectedAnswer,
   activeAnim,
   bossHealthPercent,
   onSubmit,
+  onSelectAnswer,
   onOpenRanking,
 }: BattleArenaProps) {
   const reducedMotion = prefersReducedMotion();
@@ -239,6 +241,7 @@ export default function BattleArena({
 
           <div className={`battle-dialogue ${teamFinished && defeatBeat !== 'victory' ? 'is-cinematic-hidden' : ''}`}>
             <BattleQuestionPanel
+              key={question?.id || 'no-question'}
               question={question}
               remainingSeconds={remainingSeconds}
               answered={answered}
@@ -251,7 +254,9 @@ export default function BattleArena({
               totalQuestions={totalQuestions}
               totalStages={totalStages}
               feedback={feedback}
+              selectedAnswer={selectedAnswer || ''}
               onSubmit={onSubmit}
+              onSelectAnswer={onSelectAnswer}
               onOpenRanking={onOpenRanking}
             />
           </div>

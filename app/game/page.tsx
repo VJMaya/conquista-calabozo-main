@@ -15,6 +15,11 @@ import {
 import type { BattleAnimEvent, BattleMember } from '@/types/battle';
 import { LeaderboardEntry, Player, Question } from '@/types/game';
 import { TOTAL_QUESTIONS, TOTAL_STAGES } from '@/data/pack';
+import {
+  clearGameUiSnapshot,
+  loadGameUiSnapshot,
+  saveGameUiSnapshot,
+} from '@/lib/game-ui-state';
 
 interface PublicQuestion extends Question {
   questionNumber?: number;
@@ -50,6 +55,7 @@ interface AnswerFeedback {
   pointsAwarded: number;
   correctAnswer: string;
   userAnswer?: string;
+  outcome?: 'correct' | 'incorrect' | 'timeout';
 }
 
 function resolveTeamId(team: TeamState | null) {
@@ -90,6 +96,13 @@ export default function GamePage() {
   const userIdRef = useRef('');
   const questionIdRef = useRef('');
   const queueRef = useRef<BattleAnimationQueue | null>(null);
+  const selectionBoundRef = useRef({ questionId: '', selectedAnswer: '' });
+  const answeredRef = useRef(false);
+  const pendingQuestionRef = useRef<PublicQuestion | null>(null);
+  const feedbackHoldUntilRef = useRef(0);
+  const feedbackHoldTimerRef = useRef<number | null>(null);
+
+  const ANSWER_FEEDBACK_MS = 1800;
 
   const [userId, setUserId] = useState('');
   const [question, setQuestion] = useState<PublicQuestion | null>(null);
@@ -101,6 +114,7 @@ export default function GamePage() {
   const [teamFinished, setTeamFinished] = useState(false);
   const [feedback, setFeedback] = useState<AnswerFeedback | null>(null);
   const [answered, setAnswered] = useState(false);
+  const [selectedAnswer, setSelectedAnswer] = useState('');
   const [answeredCount, setAnsweredCount] = useState(0);
   const [memberCount, setMemberCount] = useState(0);
   const [activeAnim, setActiveAnim] = useState<BattleAnimEvent | null>(null);
@@ -112,6 +126,10 @@ export default function GamePage() {
   useEffect(() => {
     questionIdRef.current = question?.id || '';
   }, [question?.id]);
+
+  useEffect(() => {
+    answeredRef.current = answered;
+  }, [answered]);
 
   useEffect(() => {
     const queue = new BattleAnimationQueue();
@@ -161,7 +179,64 @@ export default function GamePage() {
 
     socket.on('game:started', () => {
       setTeamFinished(false);
+      clearGameUiSnapshot(userIdRef.current);
     });
+
+    const applyIncomingQuestion = (data: PublicQuestion) => {
+      const limit = data.timeLimitSeconds || 30;
+      const snapshot = loadGameUiSnapshot(userIdRef.current);
+      const sameQuestion = Boolean(snapshot && snapshot.questionId === data.id);
+
+      setQuestion({
+        ...data,
+        timeLimitSeconds: limit,
+        questionType: data.questionType || 'multiple_choice',
+      });
+
+      if (sameQuestion && snapshot) {
+        selectionBoundRef.current = {
+          questionId: data.id,
+          selectedAnswer: snapshot.selectedAnswer,
+        };
+        setAnswered(snapshot.answered);
+        setWaitingForTeam(snapshot.waitingForTeam);
+        setTeamFinished(snapshot.teamFinished);
+        setFeedback(snapshot.feedback);
+        setSelectedAnswer(snapshot.selectedAnswer);
+        setRemainingSeconds(
+          snapshot.answered
+            ? snapshot.remainingSeconds
+            : Math.max(0, Math.min(limit, snapshot.remainingSeconds || limit))
+        );
+        return;
+      }
+
+      selectionBoundRef.current = { questionId: data.id, selectedAnswer: '' };
+      if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+      clearGameUiSnapshot(userIdRef.current);
+      saveGameUiSnapshot(userIdRef.current, {
+        questionId: data.id,
+        answered: false,
+        waitingForTeam: false,
+        teamFinished: false,
+        selectedAnswer: '',
+        remainingSeconds: limit,
+        feedback: null,
+      });
+      setRemainingSeconds(limit);
+      setAnswered(false);
+      setWaitingForTeam(false);
+      setTeamFinished(false);
+      setFeedback(null);
+      setSelectedAnswer('');
+      setAnsweredCount(0);
+    };
+
+    const startFeedbackHold = () => {
+      feedbackHoldUntilRef.current = Date.now() + ANSWER_FEEDBACK_MS;
+    };
 
     socket.on('team:assigned', (data: TeamState) => {
       setTeam(data);
@@ -172,18 +247,22 @@ export default function GamePage() {
     });
 
     socket.on('question:show', (data: PublicQuestion) => {
-      const limit = data.timeLimitSeconds || 30;
-      setQuestion({
-        ...data,
-        timeLimitSeconds: limit,
-        questionType: data.questionType || 'multiple_choice',
-      });
-      setRemainingSeconds(limit);
-      setAnswered(false);
-      setWaitingForTeam(false);
-      setTeamFinished(false);
-      setFeedback(null);
-      setAnsweredCount(0);
+      const wait = feedbackHoldUntilRef.current - Date.now();
+      if (wait > 0) {
+        pendingQuestionRef.current = data;
+        if (feedbackHoldTimerRef.current) {
+          window.clearTimeout(feedbackHoldTimerRef.current);
+        }
+        feedbackHoldTimerRef.current = window.setTimeout(() => {
+          feedbackHoldTimerRef.current = null;
+          feedbackHoldUntilRef.current = 0;
+          const pending = pendingQuestionRef.current;
+          pendingQuestionRef.current = null;
+          if (pending) applyIncomingQuestion(pending);
+        }, wait);
+        return;
+      }
+      applyIncomingQuestion(data);
     });
 
     socket.on('answer:result', (data: {
@@ -196,13 +275,16 @@ export default function GamePage() {
     }) => {
       const currentUserId = userIdRef.current;
       setAnswered(true);
+      answeredRef.current = true;
       setWaitingForTeam(true);
       setFeedback({
         isCorrect: data.isCorrect,
         pointsAwarded: data.pointsAwarded,
         correctAnswer: data.correctAnswer,
         userAnswer: data.userAnswer,
+        outcome: data.isCorrect ? 'correct' : 'incorrect',
       });
+      startFeedbackHold();
 
       if (typeof data.answeredCount === 'number' && typeof data.correctCount === 'number') {
         setTeam((current) =>
@@ -277,13 +359,29 @@ export default function GamePage() {
       setMemberCount(data.memberCount || 0);
     });
 
-    socket.on('question:completed', (data: { totalCorrect?: number }) => {
+    socket.on('question:completed', (data: {
+      totalCorrect?: number;
+      timedOut?: boolean;
+      correctAnswer?: string;
+    }) => {
       setWaitingForTeam(false);
       setTeam((current) =>
         current
           ? { ...current, totalCorrect: data.totalCorrect ?? current.totalCorrect }
           : current
       );
+      if (!answeredRef.current) {
+        setAnswered(true);
+        answeredRef.current = true;
+        setFeedback({
+          isCorrect: false,
+          pointsAwarded: 0,
+          correctAnswer: data.correctAnswer || '',
+          userAnswer: '',
+          outcome: 'timeout',
+        });
+        startFeedbackHold();
+      }
     });
 
     socket.on('team:finished', () => {
@@ -303,11 +401,16 @@ export default function GamePage() {
     });
 
     socket.on('game:ended', (data: { results?: unknown }) => {
+      clearGameUiSnapshot(userIdRef.current);
       localStorage.setItem('finalResults', JSON.stringify(data.results || data));
       router.push('/final');
     });
 
     return () => {
+      if (feedbackHoldTimerRef.current) {
+        window.clearTimeout(feedbackHoldTimerRef.current);
+        feedbackHoldTimerRef.current = null;
+      }
       socket.disconnect();
       socketRef.current = null;
     };
@@ -323,9 +426,48 @@ export default function GamePage() {
     return () => window.clearInterval(interval);
   }, [question?.id, answered, teamFinished, question]);
 
+  useEffect(() => {
+    if (!userId || !question?.id) return;
+    saveGameUiSnapshot(userId, {
+      questionId: question.id,
+      answered,
+      waitingForTeam,
+      teamFinished,
+      selectedAnswer:
+        selectionBoundRef.current.questionId === question.id
+          ? selectionBoundRef.current.selectedAnswer
+          : '',
+      remainingSeconds,
+      feedback,
+    });
+  }, [
+    userId,
+    question?.id,
+    answered,
+    waitingForTeam,
+    teamFinished,
+    selectedAnswer,
+    remainingSeconds,
+    feedback,
+  ]);
+
   const submitAnswer = (answer: string) => {
     const socket = socketRef.current;
     if (!socket || !question || answered || teamFinished) return;
+    setSelectedAnswer(answer);
+    selectionBoundRef.current = { questionId: question.id, selectedAnswer: answer };
+    setAnswered(true);
+    answeredRef.current = true;
+    setWaitingForTeam(true);
+    saveGameUiSnapshot(userIdRef.current, {
+      questionId: question.id,
+      answered: true,
+      waitingForTeam: true,
+      teamFinished: false,
+      selectedAnswer: answer,
+      remainingSeconds,
+      feedback,
+    });
     socket.emit('player:submit_answer', {
       questionId: question.id,
       answer,
@@ -392,9 +534,15 @@ export default function GamePage() {
           totalQuestions={totalQuestions}
           totalStages={TOTAL_STAGES}
           feedback={feedback}
+          selectedAnswer={selectedAnswer}
           activeAnim={activeAnim}
           bossHealthPercent={bossHealthPercent}
           onSubmit={submitAnswer}
+          onSelectAnswer={(letter) => {
+            if (!question || answered || teamFinished) return;
+            selectionBoundRef.current = { questionId: question.id, selectedAnswer: letter };
+            setSelectedAnswer(letter);
+          }}
           onOpenRanking={() => router.push('/ranking')}
         />
 

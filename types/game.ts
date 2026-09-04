@@ -80,4 +80,7 @@ export interface LeaderboardEntry {
   currentStage: number;
   completed?: boolean;
   memberCount?: number;
+  activePlayerCount?: number;
+  normalizedScore?: number;
+  accuracyPercent?: number;
 }

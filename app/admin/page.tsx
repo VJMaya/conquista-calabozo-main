@@ -8,12 +8,31 @@ import Card from '@/components/ui/Card';
 import LeaderboardPanel from '@/components/game/LeaderboardPanel';
 import { LeaderboardEntry } from '@/types/game';
 import { TOTAL_QUESTIONS, TOTAL_STAGES } from '@/data/pack';
+import {
+  averageResponseTime,
+  formatAverageTime,
+  top10PlayersFrom,
+} from '@/lib/player-leaderboard';
+import {
+  formatAccuracyPercent,
+  formatPlayersRoster,
+  participatingMemberCount,
+  resolveActivePlayerCount,
+  teamAccuracyPercent,
+} from '@/lib/team-ranking';
 
 interface AdminTeam {
   id: string;
   name: string;
   memberCount?: number;
-  members?: Array<{ id: string; displayName: string }>;
+  members?: Array<{
+    id: string;
+    displayName: string;
+    answeredCount?: number;
+    correctCount?: number;
+    totalTimeSeconds?: number;
+    points?: number;
+  }>;
   currentStage: number;
   currentQuestionIndex: number;
   totalCorrect: number;
@@ -158,6 +177,10 @@ export default function AdminPage() {
       )
     : 0;
 
+  const top10Players = useMemo(() => {
+    return top10PlayersFrom(teams.flatMap((team) => team.members || []));
+  }, [teams]);
+
   const top3 = leaderboard.slice(0, 3);
 
   const fastestTeams = [...teams]
@@ -272,7 +295,21 @@ export default function AdminPage() {
                         {index === 0 ? '🏆' : index === 1 ? '🥈' : '🥉'} {entry.teamName}
                       </p>
                       <p className="text-xs uppercase text-dungeon-text-secondary">
-                        {entry.totalCorrect} correct · {entry.totalTimeSeconds}s
+                        {formatAccuracyPercent(
+                          typeof entry.accuracyPercent === 'number'
+                            ? entry.accuracyPercent
+                            : teamAccuracyPercent(
+                                entry.totalCorrect,
+                                resolveActivePlayerCount(entry)
+                              )
+                        )}{' '}
+                        · {entry.totalCorrect} correct · {entry.totalTimeSeconds}s
+                      </p>
+                      <p className="text-xs text-dungeon-text-secondary">
+                        {formatPlayersRoster(
+                          resolveActivePlayerCount(entry),
+                          participatingMemberCount(entry)
+                        )}
                       </p>
                     </div>
                     <p className="text-xl font-black text-[#d4af37]">#{entry.rank}</p>
@@ -310,6 +347,44 @@ export default function AdminPage() {
             </Card>
           </div>
 
+          <Card className="overflow-hidden p-4 sm:p-6">
+            <p className="text-xs uppercase tracking-[0.28em] text-[#d4af37]">Top 10 Players</p>
+            <p className="mt-1 text-sm text-dungeon-text-secondary">
+              Live player standings from current game runtime totals
+            </p>
+            <div className="mt-4 overflow-x-auto">
+              <table className="min-w-full text-left text-sm">
+                <thead>
+                  <tr className="border-b border-[#d4af37] text-xs uppercase tracking-wide text-dungeon-text-secondary">
+                    <th className="py-2 pr-3">Rank</th>
+                    <th className="py-2 pr-3">Player Name</th>
+                    <th className="py-2 pr-3">Correct Answers</th>
+                    <th className="py-2 pr-3">Average Response Time</th>
+                    <th className="py-2">Total Points</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {top10Players.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="py-6 text-dungeon-text-secondary">
+                        Player rankings appear as answers are recorded.
+                      </td>
+                    </tr>
+                  )}
+                  {top10Players.map((player, index) => (
+                    <tr key={player.id} className="border-b border-dungeon-text-secondary/40">
+                      <td className="py-2 pr-3 font-black text-[#d4af37]">#{index + 1}</td>
+                      <td className="py-2 pr-3 font-bold">{player.displayName}</td>
+                      <td className="py-2 pr-3 text-dungeon-green">{player.correctCount || 0}</td>
+                      <td className="py-2 pr-3">{formatAverageTime(averageResponseTime(player))}</td>
+                      <td className="py-2 font-black text-[#d4af37]">{player.points || 0}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+
           <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
             <Card className="xl:col-span-2 overflow-hidden p-4 sm:p-6">
               <p className="text-xs uppercase tracking-[0.28em] text-[#d4af37]">Detailed Team Progress Table</p>
@@ -321,13 +396,15 @@ export default function AdminPage() {
                       <th className="py-2 pr-3">Stage</th>
                       <th className="py-2 pr-3">Question</th>
                       <th className="py-2 pr-3">Correct Answers</th>
+                      <th className="py-2 pr-3">Players</th>
+                      <th className="py-2 pr-3">Accuracy %</th>
                       <th className="py-2">Status</th>
                     </tr>
                   </thead>
                   <tbody>
                     {teams.length === 0 && (
                       <tr>
-                        <td colSpan={5} className="py-6 text-dungeon-text-secondary">
+                        <td colSpan={7} className="py-6 text-dungeon-text-secondary">
                           Teams will appear after the game starts.
                         </td>
                       </tr>
@@ -338,6 +415,20 @@ export default function AdminPage() {
                         <td className="py-3 pr-3">{stageNumberFor(team)}/{TOTAL_STAGES}</td>
                         <td className="py-3 pr-3">{questionNumberFor(team)}/{TOTAL_QUESTIONS}</td>
                         <td className="py-3 pr-3 text-dungeon-green">{team.totalCorrect}</td>
+                        <td className="py-3 pr-3 text-dungeon-text-secondary">
+                          {formatPlayersRoster(
+                            resolveActivePlayerCount(team),
+                            participatingMemberCount(team)
+                          )}
+                        </td>
+                        <td className="py-3 pr-3 font-black text-[#d4af37]">
+                          {formatAccuracyPercent(
+                            teamAccuracyPercent(
+                              team.totalCorrect,
+                              resolveActivePlayerCount(team)
+                            )
+                          )}
+                        </td>
                         <td className="py-3">
                           <span className={team.completed ? 'text-dungeon-green' : 'text-[#d4af37]'}>
                             {team.completed ? 'Finished' : 'In progress'}

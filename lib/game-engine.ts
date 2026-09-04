@@ -60,6 +60,7 @@ export interface RuntimeTeam {
   finishedAt: number | null;
   questionStartedAt: number | null;
   answersThisQuestion: Record<string, PlayerAnswerRecord>;
+  activePlayerCount: number;
 }
 
 export interface LeaderboardEntry {
@@ -72,6 +73,9 @@ export interface LeaderboardEntry {
   currentStage: number;
   completed: boolean;
   memberCount: number;
+  activePlayerCount: number;
+  normalizedScore: number;
+  accuracyPercent: number;
 }
 
 export interface PlayerStanding {
@@ -125,6 +129,7 @@ export function createRuntimeTeam(id: string, name: string, memberIds: string[])
     finishedAt: null,
     questionStartedAt: null,
     answersThisQuestion: {},
+    activePlayerCount: 0,
   };
 }
 
@@ -192,6 +197,7 @@ export function recalculateTeamTotals(
   let totalCorrect = 0;
   let totalTimeSeconds = 0;
   let finalScore = 0;
+  let activePlayerCount = 0;
 
   team.members.forEach((memberId) => {
     const player = playersById.get(memberId);
@@ -199,11 +205,19 @@ export function recalculateTeamTotals(
     totalCorrect += player.correctCount || 0;
     totalTimeSeconds += player.totalTimeSeconds || 0;
     finalScore += player.points || 0;
+    if (
+      (player.answeredCount || 0) > 0 ||
+      (player.correctCount || 0) > 0 ||
+      (player.totalTimeSeconds || 0) > 0
+    ) {
+      activePlayerCount += 1;
+    }
   });
 
   team.totalCorrect = totalCorrect;
   team.totalTimeSeconds = totalTimeSeconds;
   team.finalScore = finalScore;
+  team.activePlayerCount = activePlayerCount;
   return team;
 }
 
@@ -267,6 +281,10 @@ export function recordPlayerAnswer(
   }
 
   const result = scoreAnswer(team.currentQuestionIndex, submittedAnswer, elapsedQuestionSeconds(team, now));
+  const wasActive =
+    (player.answeredCount || 0) > 0 ||
+    (player.correctCount || 0) > 0 ||
+    (player.totalTimeSeconds || 0) > 0;
   team.answersThisQuestion[player.id] = {
     answer: submittedAnswer,
     timeUsedSeconds: result.timeUsedSeconds,
@@ -278,6 +296,9 @@ export function recordPlayerAnswer(
   if (result.isCorrect) player.correctCount += 1;
   player.totalTimeSeconds += result.timeUsedSeconds;
   player.points += result.pointsAwarded;
+  if (!wasActive) {
+    team.activePlayerCount = (team.activePlayerCount || 0) + 1;
+  }
 
   return { team, player, result, alreadyAnswered: false };
 }
@@ -358,27 +379,53 @@ export function completeTeamQuestionAndAdvance(
   };
 }
 
+export function participatingMemberCount(team: RuntimeTeam): number {
+  return Array.isArray(team.members) ? team.members.length : 0;
+}
+
+export function activePlayerCountForTeam(team: RuntimeTeam): number {
+  return Math.max(1, team.activePlayerCount || 0);
+}
+
+export function normalizedScoreForTeam(team: RuntimeTeam): number {
+  const possible = activePlayerCountForTeam(team) * TOTAL_QUESTIONS;
+  return team.totalCorrect / possible;
+}
+
 export function compareTeams(a: RuntimeTeam, b: RuntimeTeam): number {
-  if (a.totalCorrect !== b.totalCorrect) {
-    return b.totalCorrect - a.totalCorrect;
+  const scoreA = normalizedScoreForTeam(a);
+  const scoreB = normalizedScoreForTeam(b);
+  if (scoreA !== scoreB) {
+    return scoreB - scoreA;
   }
-  return a.totalTimeSeconds - b.totalTimeSeconds;
+  if (a.totalTimeSeconds !== b.totalTimeSeconds) {
+    return a.totalTimeSeconds - b.totalTimeSeconds;
+  }
+  return b.totalCorrect - a.totalCorrect;
 }
 
 export function buildLeaderboard(teams: RuntimeTeam[]): LeaderboardEntry[] {
   return [...teams]
     .sort(compareTeams)
-    .map((team, index) => ({
-      rank: index + 1,
-      teamId: team.id,
-      teamName: team.name,
-      totalCorrect: team.totalCorrect,
-      totalTimeSeconds: team.totalTimeSeconds,
-      finalScore: team.finalScore,
-      currentStage: team.currentStage,
-      completed: team.completed,
-      memberCount: team.members.length,
-    }));
+    .map((team, index) => {
+      const memberCount = participatingMemberCount(team);
+      const activePlayerCount = team.activePlayerCount || 0;
+      const normalizedScore = normalizedScoreForTeam(team);
+      return {
+        rank: index + 1,
+        teamId: team.id,
+        teamName: team.name,
+        totalCorrect: team.totalCorrect,
+        totalTimeSeconds: team.totalTimeSeconds,
+        finalScore: team.finalScore,
+        currentStage: team.currentStage,
+        completed: team.completed,
+        memberCount,
+        activePlayerCount,
+        normalizedScore,
+        accuracyPercent: Math.round(normalizedScore * 100),
+      };
+    });
 }
 
 export function determineWinningTeam(teams: RuntimeTeam[]): LeaderboardEntry | null {
@@ -427,6 +474,8 @@ export function allTeamsCompleted(teams: RuntimeTeam[]): boolean {
 }
 
 export function createFinalResults(teams: RuntimeTeam[], players: RuntimePlayer[]) {
+  const playersById = new Map(players.map((player) => [player.id, player]));
+  teams.forEach((team) => recalculateTeamTotals(team, playersById));
   const leaderboard = buildLeaderboard(teams);
   const standings = buildPlayerStandings(players, new Map(teams.map((team) => [team.id, team])));
   const totalCorrectAnswers = players.reduce((sum, player) => sum + player.correctCount, 0);

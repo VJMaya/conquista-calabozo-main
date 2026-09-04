@@ -48,6 +48,7 @@ export interface BattleFeedback {
   pointsAwarded: number;
   correctAnswer: string;
   userAnswer?: string;
+  outcome?: 'correct' | 'incorrect' | 'timeout';
 }
 
 export interface BattleAnimEvent {
@@ -75,8 +76,10 @@ export interface BattleArenaProps {
   totalQuestions?: number;
   totalStages?: number;
   feedback?: BattleFeedback | null;
+  selectedAnswer?: string;
   activeAnim?: BattleAnimEvent | null;
   bossHealthPercent: number;
   onSubmit: (letter: string) => void;
+  onSelectAnswer?: (letter: string) => void;
   onOpenRanking?: () => void;
 }

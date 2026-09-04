@@ -2,10 +2,20 @@
 import React from 'react';
 import { LeaderboardEntry } from '@/types/game';
 import { TOTAL_STAGES } from '@/data/pack';
+import {
+  formatAccuracyLabel,
+  resolveActivePlayerCount,
+  teamAccuracyPercent,
+} from '@/lib/team-ranking';
 
 interface LeaderboardPanelProps {
   entries: LeaderboardEntry[];
   currentUserTeamId?: string;
+}
+
+function accuracyFor(entry: LeaderboardEntry) {
+  if (typeof entry.accuracyPercent === 'number') return entry.accuracyPercent;
+  return teamAccuracyPercent(entry.totalCorrect, resolveActivePlayerCount(entry));
 }
 
 const LeaderboardPanel: React.FC<LeaderboardPanelProps> = ({
@@ -37,7 +47,7 @@ const LeaderboardPanel: React.FC<LeaderboardPanelProps> = ({
                   Stage {entry.currentStage}/{TOTAL_STAGES} • ✓ {entry.totalCorrect} · {entry.totalTimeSeconds}s
                 </p>
               </div>
-              <p className="font-bold text-lg">{entry.finalScore}</p>
+              <p className="font-bold text-lg">{formatAccuracyLabel(accuracyFor(entry))}</p>
             </div>
           </div>
         ))}

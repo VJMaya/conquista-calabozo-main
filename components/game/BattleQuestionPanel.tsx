@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import Button from '@/components/ui/Button';
 import type { BattleFeedback, BattleQuestion } from '@/types/battle';
 import './battle-arena.css';
@@ -18,7 +17,9 @@ interface BattleQuestionPanelProps {
   totalQuestions: number;
   totalStages: number;
   feedback?: BattleFeedback | null;
+  selectedAnswer: string;
   onSubmit: (letter: string) => void;
+  onSelectAnswer?: (letter: string) => void;
   onOpenRanking?: () => void;
 }
 
@@ -35,14 +36,30 @@ export default function BattleQuestionPanel({
   totalQuestions,
   totalStages,
   feedback,
+  selectedAnswer,
   onSubmit,
+  onSelectAnswer,
   onOpenRanking,
 }: BattleQuestionPanelProps) {
-  const [selected, setSelected] = useState('');
   const limit = question?.timeLimitSeconds || 30;
   const timerPercent = Math.max(0, Math.min(100, (remainingSeconds / limit) * 100));
   const timerClass =
     timerPercent > 50 ? 'bg-[#3dff7a]' : timerPercent > 25 ? 'bg-[#e6c34a]' : 'bg-[#c41e3a]';
+  const selected = selectedAnswer || '';
+  const outcome = feedback?.outcome || (feedback?.isCorrect ? 'correct' : feedback ? 'incorrect' : null);
+
+  const correctAnswerLabel = (() => {
+    if (!feedback?.correctAnswer || !question) return feedback?.correctAnswer || '';
+    const key = String(feedback.correctAnswer).trim().toUpperCase();
+    const byLetter: Record<string, string | undefined> = {
+      A: question.optionA,
+      B: question.optionB,
+      C: question.optionC,
+      D: question.optionD,
+    };
+    const text = byLetter[key];
+    return text ? `${key}) ${text}` : feedback.correctAnswer;
+  })();
 
   if (teamFinished) {
     return (
@@ -59,22 +76,6 @@ export default function BattleQuestionPanel({
           <Button className="mt-4" variant="secondary" type="button" onClick={onOpenRanking}>
             Ranking
           </Button>
-        )}
-      </section>
-    );
-  }
-
-  if (waitingForTeammates && answered) {
-    return (
-      <section className="battle-panel p-5 text-center">
-        <p className="text-xs uppercase tracking-[0.28em] text-[#d4af37]">Waiting for teammates</p>
-        <h2 className="dungeon-title mt-2 text-2xl">Answer locked in</h2>
-        {feedback && (
-          <p className="mt-3 font-bold">
-            {feedback.isCorrect
-              ? `SUCCESSFUL HIT! +${feedback.pointsAwarded} POINTS`
-              : `MISS! Correct Answer: ${feedback.correctAnswer}`}
-          </p>
         )}
       </section>
     );
@@ -107,6 +108,30 @@ export default function BattleQuestionPanel({
         {question.questionText}
       </p>
 
+      {feedback && outcome && (
+        <div className={`answer-result is-${outcome}`} role="status" aria-live="polite">
+          <p className="answer-result-title">
+            {outcome === 'correct'
+              ? '✅ CORRECT ANSWER'
+              : outcome === 'timeout'
+                ? '⏳ TIME OUT'
+                : '❌ INCORRECT ANSWER'}
+          </p>
+          {outcome === 'correct' && (
+            <p className="answer-result-points">Points Awarded: +{feedback.pointsAwarded}</p>
+          )}
+          {correctAnswerLabel && (
+            <p className="answer-result-answer">Correct Answer: {correctAnswerLabel}</p>
+          )}
+        </div>
+      )}
+
+      {waitingForTeammates && answered && (
+        <p className="mt-3 text-center text-xs uppercase tracking-[0.22em] text-[#d4af37]">
+          Waiting for teammates
+        </p>
+      )}
+
       <div className="mx-auto mt-4 max-w-xl text-center">
         <p className="text-sm font-black uppercase">
           {remainingSeconds} {remainingSeconds === 1 ? 'Second' : 'Seconds'} Remaining
@@ -119,14 +144,15 @@ export default function BattleQuestionPanel({
       <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
         {options.map((option) => (
           <button
-            key={option.letter}
+            key={`${question.id}-${option.letter}`}
             type="button"
             disabled={answered}
-            onClick={() => setSelected(option.letter)}
+            onClick={() => {
+              if (answered) return;
+              onSelectAnswer?.(option.letter);
+            }}
             className={`battle-answer min-h-[48px] px-3 py-3 text-left font-bold uppercase ${
-              selected === option.letter
-                ? 'is-selected'
-                : ''
+              selected === option.letter ? 'is-selected' : ''
             }`}
           >
             {option.letter}) {option.text}

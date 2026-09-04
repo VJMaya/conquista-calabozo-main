@@ -8,6 +8,53 @@ import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import LeaderboardPanel from '@/components/game/LeaderboardPanel';
 import { LeaderboardEntry } from '@/types/game';
+import {
+  averageResponseTime,
+  formatAverageTime,
+  top10PlayersFrom,
+} from '@/lib/player-leaderboard';
+import {
+  formatAccuracyPercent,
+  formatActivePlayers,
+  resolveActivePlayerCount,
+  teamAccuracyPercent,
+} from '@/lib/team-ranking';
+
+interface MvpPlayer {
+  displayName: string;
+  teamName: string;
+  correctCount: number;
+  totalTimeSeconds: number;
+  points: number;
+}
+
+interface PlayerStandingRow {
+  userId?: string;
+  displayName: string;
+  answeredCount?: number;
+  correctCount?: number;
+  totalTimeSeconds?: number;
+  points?: number;
+}
+
+interface FinalStats {
+  totalPlayers: number;
+  totalTeams: number;
+  totalQuestions: number;
+  totalStages: number;
+  totalCorrectAnswers: number;
+  totalPossibleAnswers?: number;
+  accuracyPercent: number;
+}
+
+interface FinalResults {
+  champion: LeaderboardEntry | null;
+  top3: LeaderboardEntry[];
+  mvp: MvpPlayer | null;
+  leaderboard: LeaderboardEntry[];
+  standings?: PlayerStandingRow[];
+  stats: FinalStats;
+}
 
 interface MvpPlayer {
   displayName: string;
@@ -100,6 +147,13 @@ export default function FinalPage() {
 
   const places = ['1st', '2nd', '3rd'];
   const top3 = results.top3?.length ? results.top3 : results.leaderboard.slice(0, 3);
+  const hallOfHeroes = top10PlayersFrom(results.standings || []);
+
+  const teamAccuracy = (team: LeaderboardEntry) =>
+    typeof team.accuracyPercent === 'number'
+      ? team.accuracyPercent
+      : teamAccuracyPercent(team.totalCorrect, resolveActivePlayerCount(team));
+  const teamActivePlayers = (team: LeaderboardEntry) => resolveActivePlayerCount(team);
 
   return (
     <Layout>
@@ -115,7 +169,9 @@ export default function FinalPage() {
             </h2>
             {results.champion && (
               <p>
-                {results.champion.totalCorrect} correct answers · {results.champion.totalTimeSeconds}s
+                {formatAccuracyPercent(teamAccuracy(results.champion))} · {results.champion.totalCorrect}{' '}
+                correct answers · {results.champion.totalTimeSeconds}s ·{' '}
+                {formatActivePlayers(teamActivePlayers(results.champion))}
               </p>
             )}
           </Card>
@@ -128,8 +184,10 @@ export default function FinalPage() {
                   {places[index] || `${index + 1}th`}
                 </p>
                 <p className="font-bold text-xl">{team.teamName}</p>
+                <p className="text-2xl font-black text-[#d4af37]">{formatAccuracyPercent(teamAccuracy(team))}</p>
                 <p className="text-sm">
-                  {team.totalCorrect} correct · {team.totalTimeSeconds}s
+                  {team.totalCorrect} correct · {team.totalTimeSeconds}s ·{' '}
+                  {formatActivePlayers(teamActivePlayers(team))}
                 </p>
               </Card>
             ))}
@@ -179,6 +237,48 @@ export default function FinalPage() {
           </div>
 
           <LeaderboardPanel entries={results.leaderboard || []} />
+
+          <Card className="mt-8 mb-6 overflow-hidden">
+            <p className="text-xs uppercase tracking-[0.35em] text-[#d4af37]">Hall of Heroes</p>
+            <h2 className="dungeon-title mt-2 text-2xl">Top 10 Players</h2>
+            <p className="mt-1 text-sm text-dungeon-text-secondary">
+              Individual honors from the same player totals shown in the Admin Portal
+            </p>
+            <div className="mt-4 overflow-x-auto">
+              <table className="min-w-full text-left text-sm">
+                <thead>
+                  <tr className="border-b border-[#d4af37] text-xs uppercase tracking-wide text-dungeon-text-secondary">
+                    <th className="py-2 pr-3">Rank</th>
+                    <th className="py-2 pr-3">Player Name</th>
+                    <th className="py-2 pr-3">Correct Answers</th>
+                    <th className="py-2 pr-3">Average Response Time</th>
+                    <th className="py-2">Total Points</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {hallOfHeroes.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="py-6 text-dungeon-text-secondary">
+                        Player honors appear when final results include player standings.
+                      </td>
+                    </tr>
+                  )}
+                  {hallOfHeroes.map((player, index) => (
+                    <tr
+                      key={player.userId || `${player.displayName}-${index}`}
+                      className="border-b border-dungeon-text-secondary/40"
+                    >
+                      <td className="py-3 pr-3 font-black text-[#d4af37]">#{index + 1}</td>
+                      <td className="py-3 pr-3 font-bold">{player.displayName}</td>
+                      <td className="py-3 pr-3 text-dungeon-green">{player.correctCount || 0}</td>
+                      <td className="py-3 pr-3">{formatAverageTime(averageResponseTime(player))}</td>
+                      <td className="py-3 font-black text-[#d4af37]">{player.points || 0}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
 
           <div className="flex gap-3 mt-6">
             <Button variant="secondary" type="button" onClick={() => router.push('/ranking')}>

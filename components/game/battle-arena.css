@@ -1093,6 +1093,55 @@
   box-shadow: inset 0 0 8px rgba(255,255,255,0.35), 0 0 9px rgba(212,175,55,0.35);
 }
 
+.answer-result {
+  margin: 16px auto 0;
+  max-width: 36rem;
+  padding: 12px 14px;
+  border: 2px solid;
+  text-align: center;
+  animation: answer-result-hold 1800ms ease-out forwards;
+}
+
+.answer-result.is-correct {
+  border-color: #3dff7a;
+  background: rgba(12, 48, 28, 0.72);
+  color: #3dff7a;
+}
+
+.answer-result.is-incorrect {
+  border-color: #c41e3a;
+  background: rgba(48, 10, 16, 0.72);
+  color: #ff6b81;
+}
+
+.answer-result.is-timeout {
+  border-color: #d4af37;
+  background: rgba(42, 32, 8, 0.72);
+  color: #ffd24a;
+}
+
+.answer-result-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
+.answer-result-points,
+.answer-result-answer {
+  margin: 8px 0 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #e0e6ff;
+}
+
+@keyframes answer-result-hold {
+  0% { opacity: 0; transform: translateY(8px); }
+  12% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
 .boss-health-frame {
   position: relative;
   width: min(100%, 620px);
@@ -1216,6 +1265,7 @@
   .combat-label,
   .hero-weapon-flash,
   .defeat-title,
+  .answer-result,
   .battle-stage.is-roar .battle-scene,
   .dragon-roar-blast,
   .dragon-roar-ring,
