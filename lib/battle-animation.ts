@@ -3,6 +3,18 @@ import type { AttackStyle, BattleAnimEvent } from '@/types/battle';
 export const BATTLE_ANIM_MS = 500;
 export const BATTLE_SEEN_LIMIT = 80;
 
+/** Start offsets for the boss defeat cinematic, in order. */
+export const DEFEAT_BEAT_MS = {
+  roar: 0,
+  fall: 600,
+  silence: 1600,
+  titleFalls: 2400,
+  titleCleared: 3800,
+  victory: 5400,
+} as const;
+
+export const DEFEAT_SEQUENCE_MS = DEFEAT_BEAT_MS.victory;
+
 export function prefersReducedMotion(): boolean {
   if (typeof window === 'undefined') return false;
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;

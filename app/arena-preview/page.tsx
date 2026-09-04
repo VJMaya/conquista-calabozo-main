@@ -16,12 +16,19 @@ const MEMBERS: BattleMember[] = [
 export default function ArenaPreviewPage() {
   const [questionNumber, setQuestionNumber] = useState(4);
   const [activeAnim, setActiveAnim] = useState<BattleAnimEvent | null>(null);
+  const [teamFinished, setTeamFinished] = useState(false);
 
   useEffect(() => {
     if (!activeAnim) return undefined;
     const timer = window.setTimeout(() => setActiveAnim(null), BATTLE_ANIM_MS);
     return () => window.clearTimeout(timer);
   }, [activeAnim]);
+
+  // Drop back to idle for a frame so the cinematic restarts from the roar.
+  const replayCinematic = () => {
+    setTeamFinished(false);
+    window.setTimeout(() => setTeamFinished(true), 60);
+  };
 
   const play = (kind: BattleAnimEvent['kind'], pointsAwarded: number, isCorrect: boolean) => {
     setActiveAnim({
@@ -71,10 +78,24 @@ export default function ArenaPreviewPage() {
         </button>
         <button
           type="button"
-          className="border-2 border-[#6b6574] px-3 py-1 text-xs font-bold uppercase text-[#9aa3b2]"
+          className="border-2 border-[#d4af37] px-3 py-1 text-xs font-bold uppercase text-[#ffd24a]"
           onClick={() => play('timeout', 0, false)}
         >
           Time out
+        </button>
+        <button
+          type="button"
+          className="border-2 border-[#ffd24a] px-3 py-1 text-xs font-bold uppercase text-[#ffd24a]"
+          onClick={replayCinematic}
+        >
+          Clear dungeon
+        </button>
+        <button
+          type="button"
+          className="border-2 border-[#8892b0] px-3 py-1 text-xs font-bold uppercase text-[#c9d0dc]"
+          onClick={() => setTeamFinished(false)}
+        >
+          Reset
         </button>
       </div>
       <BattleArena
@@ -96,7 +117,7 @@ export default function ArenaPreviewPage() {
         remainingSeconds={21}
         answered={false}
         waitingForTeammates={false}
-        teamFinished={false}
+        teamFinished={teamFinished}
         currentRank={2}
         stageNumber={Math.ceil(questionNumber / 10)}
         questionNumber={questionNumber}

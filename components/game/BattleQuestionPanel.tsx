@@ -46,8 +46,9 @@ export default function BattleQuestionPanel({
 
   if (teamFinished) {
     return (
-      <section className="battle-panel p-5 text-center">
-        <p className="dungeon-title text-2xl sm:text-4xl">DUNGEON CLEARED!</p>
+      <section className="battle-panel battle-victory-panel p-5 text-center">
+        <p className="defeat-victory-kicker">VICTORY</p>
+        <p className="dungeon-title text-2xl sm:text-4xl">DUNGEON CLEARED</p>
         <p className="mt-3 text-lg font-bold uppercase">TEAM {teamName}</p>
         <p className="mt-4 text-xs uppercase tracking-[0.28em] text-[#d4af37]">Current Rank</p>
         <p className="text-4xl font-black text-[#d4af37]">#{currentRank || '—'}</p>

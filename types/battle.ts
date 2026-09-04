@@ -10,6 +10,14 @@ export type AttackStyle =
   | 'archer-arrow'
   | 'elf-strike'
   | 'dwarf-hammer';
+export type DefeatBeat =
+  | 'idle'
+  | 'roar'
+  | 'fall'
+  | 'silence'
+  | 'title-falls'
+  | 'title-cleared'
+  | 'victory';
 
 export interface BattleMember {
   id: string;

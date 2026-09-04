@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
-import type { BossVisualState } from '@/types/battle';
+import type { BossVisualState, DefeatBeat } from '@/types/battle';
 import { BATTLE_ASSET_PATHS, resolveBossPhase } from '@/lib/battle-assets';
 import './battle-arena.css';
 
@@ -15,6 +15,7 @@ interface BattleBossProps {
   activeDodge?: boolean;
   criticalHit?: boolean;
   questionNumber?: number;
+  defeatBeat?: DefeatBeat;
 }
 
 const PHASES = {
@@ -55,6 +56,7 @@ export default function BattleBoss({
   activeDodge = false,
   criticalHit = false,
   questionNumber = 1,
+  defeatBeat = 'idle',
 }: BattleBossProps) {
   const health = clampHealth(bossHealthPercent);
   const [imageFailed, setImageFailed] = useState(false);
@@ -75,13 +77,15 @@ export default function BattleBoss({
 
   const motionClass = reducedMotion
     ? ''
-    : motion === 'hit'
-      ? 'is-hit'
-      : motion === 'dodge'
-        ? 'is-dodge'
-        : 'is-idle';
+    : defeatBeat === 'roar'
+      ? 'is-roar'
+      : motion === 'hit'
+        ? 'is-hit'
+        : motion === 'dodge'
+          ? 'is-dodge'
+          : 'is-idle';
   const clearedClass = teamFinished ? 'is-team-cleared' : '';
-  const critClass = criticalHit && motion === 'hit' ? 'is-crit' : '';
+  const critClass = criticalHit && motion === 'hit' && defeatBeat === 'idle' ? 'is-crit' : '';
   const dodgeDir = questionNumber % 2 === 0 ? 'is-dodge-left' : 'is-dodge-right';
   const showFx = !teamFinished && !imageFailed;
 
@@ -168,6 +172,13 @@ export default function BattleBoss({
               <span className="dragon-ember e2" />
               <span className="dragon-ember e3" />
               <span className="dragon-ember e4" />
+            </>
+          )}
+          {defeatBeat === 'roar' && !imageFailed && (
+            <>
+              <span className="dragon-roar-blast" />
+              <span className="dragon-roar-ring r1" />
+              <span className="dragon-roar-ring r2" />
             </>
           )}
         </div>
