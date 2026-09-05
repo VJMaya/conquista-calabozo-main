@@ -12,6 +12,7 @@ import { DEFEAT_BEAT_MS, prefersReducedMotion } from '@/lib/battle-animation';
 import {
   BATTLE_ASSET_PATHS,
   BOSS_PHASE_CLASS,
+  FORMATION_ROW,
   orderPartyForFormation,
   resolveBossPhase,
 } from '@/lib/battle-assets';
@@ -107,8 +108,8 @@ export default function BattleArena({
   const showVictoryPanel = !teamFinished || defeatBeat === 'victory';
 
   return (
-    <div className="battle-arena-bg flex min-h-screen flex-col overflow-x-hidden">
-      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-2 p-2 sm:p-4">
+    <div className="battle-arena-bg app-shell flex flex-col">
+      <div className="battle-arena-frame mx-auto flex w-full flex-1 flex-col gap-2 p-2 sm:p-4">
         <div className={`battle-stage ${phaseClass} ${clearing ? `is-clearing is-${defeatBeat}` : ''}`}>
           <section className="battle-scene">
             <div className="battle-scene-craft" aria-hidden>
@@ -133,7 +134,7 @@ export default function BattleArena({
                   alt=""
                   fill
                   priority
-                  sizes="(max-width: 1152px) 100vw, 1152px"
+                  sizes="(max-width: 1920px) 100vw, 1920px"
                   className="battle-scene-photo-img"
                   onError={() => setArenaBgFailed(true)}
                 />
@@ -179,14 +180,17 @@ export default function BattleArena({
               correctAnswer={feedback?.correctAnswer}
             />
 
-            <div className="battle-party">
+            <div className={`battle-party party-size-${formation.length}`}>
               {formation.map((member, index) => {
                 let visualState: CharacterVisualState = 'idle';
                 if (activeAnim && activeAnim.userId === member.id) {
                   visualState = activeAnim.isCorrect ? 'successful-hit' : 'missed-attack';
                 }
                 return (
-                  <div key={member.id} className={`battle-party-slot slot-${index + 1}`}>
+                  <div
+                    key={member.id}
+                    className={`battle-party-slot slot-${index + 1} is-row-${FORMATION_ROW[member.avatarKey] ?? 1}`}
+                  >
                     <BattleCharacter
                       displayName={member.displayName}
                       avatarKey={member.avatarKey}

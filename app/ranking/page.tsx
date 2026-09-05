@@ -61,8 +61,8 @@ export default function RankingPage() {
 
   return (
     <Layout>
-      <div className="min-h-screen p-6">
-        <div className="max-w-3xl mx-auto">
+      <div className="min-h-full overflow-x-hidden p-4 sm:p-6">
+        <div className="mx-auto w-full max-w-3xl">
           <h1 className="dungeon-title text-4xl mb-2">Ranking</h1>
           <p className="dungeon-subtitle mb-4">{status}</p>
           <p className="mb-6 text-sm text-dungeon-text-secondary">

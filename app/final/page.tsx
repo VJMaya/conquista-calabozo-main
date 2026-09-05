@@ -157,8 +157,8 @@ export default function FinalPage() {
 
   return (
     <Layout>
-      <div className="min-h-screen p-6">
-        <div className="max-w-5xl mx-auto">
+      <div className="min-h-full overflow-x-hidden overflow-y-auto p-4 sm:p-6">
+        <div className="mx-auto w-full max-w-5xl">
           <h1 className="dungeon-title text-4xl mb-2">Dungeon Conquered</h1>
           <p className="dungeon-subtitle mb-8">Final results of Conquest of the Dungeon</p>
 

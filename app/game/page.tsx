@@ -493,11 +493,11 @@ export default function GamePage() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-[#0b0a0d]">
+      <div className="min-h-full overflow-x-hidden bg-[#0b0a0d]">
         <div className="sr-only" aria-live="polite">
           {answeredCount} of {memberCount} members answered
         </div>
-        <div className="battle-page-hud mx-auto flex max-w-6xl items-center justify-between gap-3 px-3 py-2">
+        <div className="battle-page-hud mx-auto flex w-full max-w-[1920px] items-center justify-between gap-3 px-3 py-2">
           <p className="dungeon-title text-sm sm:text-base">Conquest of the Dungeon</p>
           <div className="flex gap-2">
             <Button
@@ -547,7 +547,7 @@ export default function GamePage() {
         />
 
         {showLeaderboard && (
-          <div className="mx-auto max-w-6xl px-3 pb-6">
+          <div className="mx-auto w-full max-w-[1920px] px-3 pb-6">
             <LeaderboardPanel entries={leaderboard} currentUserTeamId={teamId} />
           </div>
         )}

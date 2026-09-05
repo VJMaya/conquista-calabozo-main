@@ -7,13 +7,13 @@ import { HERO_PORTRAIT_PATHS } from '@/lib/battle-assets';
 import { AvatarClass } from '@/types/game';
 import './landing-hero.css';
 
-const AVATAR_CLASSES: { key: AvatarClass; name: string; lines: [string, string] }[] = [
-  { key: 'fairy', name: 'Fairy', lines: ['Mystical support hero.', 'Master of arcane energy.'] },
-  { key: 'wizard', name: 'Wizard', lines: ['Ancient spellcaster.', 'Controls powerful magic.'] },
-  { key: 'knight', name: 'Knight', lines: ['Frontline warrior.', 'Fearless protector.'] },
-  { key: 'archer', name: 'Archer', lines: ['Precision marksman.', 'Deadly from distance.'] },
-  { key: 'elf', name: 'Elf', lines: ['Agile assassin.', 'Master of enchanted blades.'] },
-  { key: 'dwarf', name: 'Dwarf', lines: ['Forge-born fighter.', 'Devastating hammer attacks.'] },
+const AVATAR_CLASSES: { key: AvatarClass; name: string; role: string; lines: [string, string] }[] = [
+  { key: 'fairy', name: 'Fairy', role: 'Support', lines: ['Mystical support hero.', 'Master of arcane energy.'] },
+  { key: 'wizard', name: 'Wizard', role: 'Mage', lines: ['Ancient spellcaster.', 'Controls powerful magic.'] },
+  { key: 'knight', name: 'Knight', role: 'Tank', lines: ['Frontline warrior.', 'Fearless protector.'] },
+  { key: 'archer', name: 'Archer', role: 'Ranged', lines: ['Precision marksman.', 'Deadly from distance.'] },
+  { key: 'elf', name: 'Elf', role: 'Assassin', lines: ['Agile assassin.', 'Master of enchanted blades.'] },
+  { key: 'dwarf', name: 'Dwarf', role: 'Bruiser', lines: ['Forge-born fighter.', 'Devastating hammer attacks.'] },
 ];
 
 const LANDING_STATS = [
@@ -100,25 +100,6 @@ export default function HomePage() {
 
           <p className="landing-gate-label is-classes">Choose your class</p>
 
-          <div className="landing-showcase">
-            <div className="landing-showcase-aura" aria-hidden />
-            <span className="landing-showcase-art">
-              <Image
-                src={HERO_PORTRAIT_PATHS[selectedHero.key]}
-                alt={selectedHero.name}
-                fill
-                sizes="280px"
-                priority
-              />
-            </span>
-            <h2 className="landing-showcase-name">{selectedHero.name}</h2>
-            {selectedHero.lines.map((line) => (
-              <p key={line} className="landing-showcase-line">
-                {line}
-              </p>
-            ))}
-          </div>
-
           <div className="landing-classes">
             {AVATAR_CLASSES.map((avatar) => {
               const selected = selectedAvatar === avatar.key;
@@ -133,12 +114,35 @@ export default function HomePage() {
                   aria-pressed={selected}
                 >
                   <span className="landing-class-art">
-                    <Image src={src} alt={avatar.name} fill sizes="120px" />
+                    <Image src={src} alt={avatar.name} fill sizes="180px" />
                   </span>
                   <p className="landing-class-name">{avatar.name}</p>
+                  <p className="landing-class-role">{avatar.role}</p>
                 </button>
               );
             })}
+          </div>
+
+          <div className="landing-showcase">
+            <div className="landing-showcase-aura" aria-hidden />
+            <span className="landing-showcase-art">
+              <Image
+                src={HERO_PORTRAIT_PATHS[selectedHero.key]}
+                alt={selectedHero.name}
+                fill
+                sizes="280px"
+                priority
+              />
+            </span>
+            <div className="landing-showcase-copy">
+              <h2 className="landing-showcase-name">{selectedHero.name}</h2>
+              <p className="landing-showcase-role">{selectedHero.role}</p>
+              {selectedHero.lines.map((line) => (
+                <p key={line} className="landing-showcase-line">
+                  {line}
+                </p>
+              ))}
+            </div>
           </div>
 
           {error && (

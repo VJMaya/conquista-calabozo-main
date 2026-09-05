@@ -1,11 +1,13 @@
 .landing-hero.command {
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .dm-inner {
   position: relative;
   z-index: 3;
   width: min(80rem, 100%);
+  max-width: 100%;
   margin: 0 auto;
   padding: 2rem 1.15rem 2.75rem;
 }
@@ -277,8 +279,12 @@
   }
 
   .dm-commands {
-    grid-template-columns: 1.4fr repeat(4, minmax(0, 1fr));
+    grid-template-columns: 1fr 1fr;
     align-items: stretch;
+  }
+
+  .dm-open {
+    grid-column: 1 / -1;
   }
 
   .dm-grid-3 {
@@ -291,6 +297,16 @@
 
   .dm-teams {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1400px) {
+  .dm-commands {
+    grid-template-columns: 1.4fr repeat(4, minmax(0, 1fr));
+  }
+
+  .dm-open {
+    grid-column: auto;
   }
 }
 

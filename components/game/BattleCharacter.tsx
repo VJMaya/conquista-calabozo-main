@@ -50,7 +50,7 @@ export function RPGHeroPortrait({
           src={src}
           alt=""
           fill
-          sizes={compact ? '56px' : '140px'}
+          sizes={compact ? '56px' : '(max-width: 1366px) 220px, (max-width: 1600px) 280px, 330px'}
           className="hero-portrait-art"
           onError={() => setFailed(true)}
         />

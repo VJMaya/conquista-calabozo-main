@@ -1,5 +1,6 @@
 .landing-hero.hall {
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .hall-torch {
@@ -58,6 +59,7 @@
   position: relative;
   z-index: 3;
   width: min(68rem, 100%);
+  max-width: 100%;
   margin: 0 auto;
   padding: 2rem 1.15rem 2.5rem;
 }
@@ -282,6 +284,8 @@
 .hall-ready-wrap {
   display: flex;
   justify-content: center;
+  width: 100%;
+  padding-bottom: 0.5rem;
 }
 
 .hall-ready-wrap .landing-enter {
