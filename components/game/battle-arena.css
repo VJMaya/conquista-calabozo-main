@@ -989,48 +989,65 @@
 .battle-party-slot.is-row-1 { --depth: 1.03; }
 .battle-party-slot.is-row-2 { --depth: 0.88; }
 
-.battle-party-slot.slot-1 { left: 53%; bottom: 5%; z-index: 5; }
-.battle-party-slot.slot-2 { left: 38%; bottom: 9%; z-index: 4; }
-.battle-party-slot.slot-3 { left: 50%; bottom: 20%; z-index: 3; }
-.battle-party-slot.slot-4 { left: 34%; bottom: 23%; z-index: 2; }
-.battle-party-slot.slot-5 { left: 42%; bottom: 33%; z-index: 1; }
+.battle-party-slot.slot-1 { left: 24%; bottom: 5%; z-index: 5; }
+.battle-party-slot.slot-2 { left: 9%; bottom: 9%; z-index: 4; }
+.battle-party-slot.slot-3 { left: 21%; bottom: 20%; z-index: 3; }
+.battle-party-slot.slot-4 { left: 5%; bottom: 23%; z-index: 2; }
+.battle-party-slot.slot-5 { left: 13%; bottom: 33%; z-index: 1; }
 
 .battle-party.party-size-1 .slot-1 {
-  left: 46%;
+  left: 17%;
   bottom: 8%;
 }
 
 .battle-party.party-size-2 .slot-1 {
-  left: 52%;
+  left: 23%;
   bottom: 6%;
 }
 
 .battle-party.party-size-2 .slot-2 {
-  left: 38%;
+  left: 9%;
   bottom: 10%;
 }
 
 .battle-party.party-size-3 .slot-1 {
-  left: 52%;
+  left: 23%;
   bottom: 5%;
 }
 
 .battle-party.party-size-3 .slot-2 {
-  left: 36%;
+  left: 7%;
   bottom: 9%;
 }
 
 .battle-party.party-size-3 .slot-3 {
-  left: 44%;
+  left: 15%;
   bottom: 22%;
 }
 
+/* Portraits shrink faster than the arena below 1440px, so keep a lighter
+   rightward nudge so the combat gap stays inside the 15-20% band. */
+@media (min-width: 768px) and (max-width: 1439px) {
+  .battle-party-slot.slot-1 { left: 28%; }
+  .battle-party-slot.slot-2 { left: 13%; }
+  .battle-party-slot.slot-3 { left: 25%; }
+  .battle-party-slot.slot-4 { left: 9%; }
+  .battle-party-slot.slot-5 { left: 17%; }
+
+  .battle-party.party-size-1 .slot-1 { left: 21%; }
+  .battle-party.party-size-2 .slot-1 { left: 27%; }
+  .battle-party.party-size-2 .slot-2 { left: 13%; }
+  .battle-party.party-size-3 .slot-1 { left: 27%; }
+  .battle-party.party-size-3 .slot-2 { left: 11%; }
+  .battle-party.party-size-3 .slot-3 { left: 19%; }
+}
+
 @media (max-width: 767px) {
-  .battle-party-slot.slot-1 { left: 50%; }
-  .battle-party-slot.slot-2 { left: 34%; }
-  .battle-party-slot.slot-3 { left: 47%; }
-  .battle-party-slot.slot-4 { left: 31%; }
-  .battle-party-slot.slot-5 { left: 40%; bottom: 31%; }
+  .battle-party-slot.slot-1 { left: 23%; }
+  .battle-party-slot.slot-2 { left: 8%; }
+  .battle-party-slot.slot-3 { left: 20%; }
+  .battle-party-slot.slot-4 { left: 5%; }
+  .battle-party-slot.slot-5 { left: 13%; bottom: 31%; }
 }
 
 .battle-boss-anchor {
