@@ -1,0 +1,374 @@
+.landing-hero.hall {
+  overflow: auto;
+}
+
+.hall-torch {
+  pointer-events: none;
+  position: absolute;
+  z-index: 2;
+  width: 18rem;
+  height: 18rem;
+  border-radius: 50%;
+  filter: blur(28px);
+  background: radial-gradient(circle, rgba(232, 140, 48, 0.38), transparent 70%);
+  animation: hall-torch-flicker 2.6s ease-in-out infinite;
+}
+
+.hall-torch.is-left {
+  left: -4rem;
+  top: 28%;
+}
+
+.hall-torch.is-right {
+  right: -4rem;
+  top: 42%;
+}
+
+.hall-embers,
+.hall-sparks {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+}
+
+.hall-ember {
+  position: absolute;
+  bottom: -8%;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #f0c060;
+  box-shadow: 0 0 10px 3px rgba(232, 140, 48, 0.65);
+  animation: hall-ember-rise 9s linear infinite;
+}
+
+.hall-spark {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #d4a0ff;
+  box-shadow: 0 0 8px 2px rgba(168, 85, 247, 0.7);
+  animation: hall-spark-drift 7.5s ease-in-out infinite;
+}
+
+.hall-inner {
+  position: relative;
+  z-index: 3;
+  width: min(68rem, 100%);
+  margin: 0 auto;
+  padding: 2rem 1.15rem 2.5rem;
+}
+
+.hall-header {
+  text-align: center;
+  margin-bottom: 1.4rem;
+}
+
+.hall-title {
+  margin: 0;
+  color: #e8c86a;
+  font-size: clamp(2rem, 5vw, 3.4rem);
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-shadow:
+    0 0 18px rgba(212, 175, 55, 0.5),
+    0 2px 0 #3a2a0a,
+    0 8px 24px rgba(0, 0, 0, 0.85);
+}
+
+.hall-subtitle {
+  margin: 0.75rem 0 0;
+  color: #c4b48a;
+  font-size: clamp(0.85rem, 2vw, 1.05rem);
+  letter-spacing: 0.08em;
+}
+
+.hall-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.hall-stat {
+  border: 1px solid rgba(212, 175, 55, 0.55);
+  background:
+    linear-gradient(180deg, rgba(22, 16, 28, 0.86), rgba(10, 8, 16, 0.9)),
+    repeating-linear-gradient(
+      135deg,
+      rgba(60, 48, 32, 0.18) 0 10px,
+      rgba(20, 16, 12, 0.18) 10px 20px
+    );
+  box-shadow:
+    0 0 18px rgba(148, 72, 220, 0.16),
+    inset 0 0 18px rgba(0, 0, 0, 0.35);
+  text-align: center;
+  padding: 0.9rem 0.6rem;
+}
+
+.hall-stat-label {
+  margin: 0;
+  color: #d4af37;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.hall-stat-value {
+  margin: 0.4rem 0 0;
+  color: #f8ecd0;
+  font-size: 1.7rem;
+  font-weight: 900;
+  text-shadow: 0 0 12px rgba(168, 85, 247, 0.35);
+}
+
+.hall-stat-value.is-waiting {
+  color: #e8c86a;
+}
+
+.hall-stat-value.is-ready {
+  color: #8fd18f;
+}
+
+.hall-portal-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0.4rem 0 1.4rem;
+}
+
+.hall-portal {
+  position: relative;
+  width: min(14rem, 62vw);
+  height: min(14rem, 62vw);
+  display: grid;
+  place-items: center;
+}
+
+.hall-portal-ring,
+.hall-portal-core {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+}
+
+.hall-portal-ring {
+  border: 2px solid rgba(232, 200, 106, 0.7);
+  box-shadow:
+    0 0 24px rgba(168, 85, 247, 0.45),
+    inset 0 0 28px rgba(112, 48, 168, 0.45);
+  animation: hall-portal-pulse 3.2s ease-in-out infinite;
+}
+
+.hall-portal-core {
+  inset: 18%;
+  background:
+    radial-gradient(circle, rgba(210, 170, 255, 0.55), rgba(72, 24, 128, 0.2) 55%, transparent 70%);
+  animation: hall-portal-spin 12s linear infinite;
+}
+
+.hall-portal-copy {
+  margin: 0.9rem 0 0;
+  color: #e8c86a;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.hall-portal-count {
+  margin: 0.35rem 0 0;
+  color: #f4e8c8;
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+}
+
+.hall-note {
+  margin: 0 0 1.4rem;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  background: rgba(8, 6, 14, 0.72);
+  color: #c4b48a;
+  font-size: 0.88rem;
+  letter-spacing: 0.03em;
+  text-align: center;
+  padding: 0.9rem 1rem;
+}
+
+.hall-roster-title {
+  margin: 0 0 0.85rem;
+  color: #e8c86a;
+  font-size: 1.15rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.hall-roster {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.hall-hero {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  background:
+    linear-gradient(180deg, rgba(22, 16, 28, 0.86), rgba(10, 8, 16, 0.9)),
+    repeating-linear-gradient(
+      135deg,
+      rgba(60, 48, 32, 0.14) 0 10px,
+      rgba(20, 16, 12, 0.14) 10px 20px
+    );
+  box-shadow: 0 0 16px rgba(148, 72, 220, 0.12);
+  padding: 0.7rem 0.85rem;
+}
+
+.hall-hero-art {
+  position: relative;
+  flex: 0 0 4.4rem;
+  width: 4.4rem;
+  height: 4.4rem;
+}
+
+.hall-hero-art img {
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.7));
+}
+
+.hall-hero-name {
+  margin: 0;
+  color: #f8ecd0;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.hall-hero-class {
+  margin: 0.15rem 0 0;
+  color: #c4b48a;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.hall-hero-status {
+  margin-left: auto;
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  color: #e8c86a;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.5rem;
+  white-space: nowrap;
+}
+
+.hall-hero-status.is-ready {
+  border-color: rgba(143, 209, 143, 0.7);
+  color: #8fd18f;
+  box-shadow: 0 0 12px rgba(80, 180, 90, 0.25);
+}
+
+.hall-ready-wrap {
+  display: flex;
+  justify-content: center;
+}
+
+.hall-ready-wrap .landing-enter {
+  width: min(28rem, 100%);
+}
+
+@keyframes hall-torch-flicker {
+  0%,
+  100% {
+    opacity: 0.72;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes hall-ember-rise {
+  0% {
+    transform: translate3d(0, 0, 0) scale(0.8);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(18px, -110vh, 0) scale(0.4);
+    opacity: 0;
+  }
+}
+
+@keyframes hall-spark-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.25;
+  }
+  50% {
+    transform: translate3d(12px, -18px, 0);
+    opacity: 0.9;
+  }
+}
+
+@keyframes hall-portal-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.78;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+}
+
+@keyframes hall-portal-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (min-width: 768px) {
+  .hall-stats {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .hall-roster {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1100px) {
+  .hall-roster {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hall-torch,
+  .hall-ember,
+  .hall-spark,
+  .hall-portal-ring,
+  .hall-portal-core {
+    animation: none;
+  }
+}
