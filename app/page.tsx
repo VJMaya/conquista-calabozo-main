@@ -7,13 +7,13 @@ import { HERO_PORTRAIT_PATHS } from '@/lib/battle-assets';
 import { AvatarClass } from '@/types/game';
 import './landing-hero.css';
 
-const AVATAR_CLASSES: { key: AvatarClass; name: string }[] = [
-  { key: 'fairy', name: 'Fairy' },
-  { key: 'wizard', name: 'Wizard' },
-  { key: 'knight', name: 'Knight' },
-  { key: 'archer', name: 'Archer' },
-  { key: 'elf', name: 'Elf' },
-  { key: 'dwarf', name: 'Dwarf' },
+const AVATAR_CLASSES: { key: AvatarClass; name: string; lines: [string, string] }[] = [
+  { key: 'fairy', name: 'Fairy', lines: ['Mystical support hero.', 'Master of arcane energy.'] },
+  { key: 'wizard', name: 'Wizard', lines: ['Ancient spellcaster.', 'Controls powerful magic.'] },
+  { key: 'knight', name: 'Knight', lines: ['Frontline warrior.', 'Fearless protector.'] },
+  { key: 'archer', name: 'Archer', lines: ['Precision marksman.', 'Deadly from distance.'] },
+  { key: 'elf', name: 'Elf', lines: ['Agile assassin.', 'Master of enchanted blades.'] },
+  { key: 'dwarf', name: 'Dwarf', lines: ['Forge-born fighter.', 'Devastating hammer attacks.'] },
 ];
 
 const LANDING_STATS = [
@@ -63,6 +63,9 @@ export default function HomePage() {
     }
   };
 
+  const selectedHero =
+    AVATAR_CLASSES.find((avatar) => avatar.key === selectedAvatar) || AVATAR_CLASSES[2];
+
   return (
     <section className="landing-hero">
       <div className="landing-hero-bg" aria-hidden />
@@ -96,6 +99,26 @@ export default function HomePage() {
           />
 
           <p className="landing-gate-label is-classes">Choose your class</p>
+
+          <div className="landing-showcase">
+            <div className="landing-showcase-aura" aria-hidden />
+            <span className="landing-showcase-art">
+              <Image
+                src={HERO_PORTRAIT_PATHS[selectedHero.key]}
+                alt={selectedHero.name}
+                fill
+                sizes="280px"
+                priority
+              />
+            </span>
+            <h2 className="landing-showcase-name">{selectedHero.name}</h2>
+            {selectedHero.lines.map((line) => (
+              <p key={line} className="landing-showcase-line">
+                {line}
+              </p>
+            ))}
+          </div>
+
           <div className="landing-classes">
             {AVATAR_CLASSES.map((avatar) => {
               const selected = selectedAvatar === avatar.key;

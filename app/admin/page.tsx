@@ -2,12 +2,12 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
-import Layout from '@/components/Layout';
-import Button from '@/components/ui/Button';
-import Card from '@/components/ui/Card';
 import LeaderboardPanel from '@/components/game/LeaderboardPanel';
 import { LeaderboardEntry } from '@/types/game';
 import { TOTAL_QUESTIONS, TOTAL_STAGES } from '@/data/pack';
+import '../landing-hero.css';
+import '../lobby-hall.css';
+import '../admin-command.css';
 import {
   averageResponseTime,
   formatAverageTime,
@@ -48,6 +48,24 @@ interface FeedItem {
 
 const MAX_PLAYERS = 250;
 const MAX_FEED = 24;
+const RANK_MEDALS = ['🥇', '🥈', '🥉'];
+
+const EMBERS = [
+  { left: '8%', delay: '0s', duration: '8s' },
+  { left: '24%', delay: '1.3s', duration: '10s' },
+  { left: '41%', delay: '0.5s', duration: '9s' },
+  { left: '58%', delay: '2s', duration: '11s' },
+  { left: '73%', delay: '0.9s', duration: '8.5s' },
+  { left: '89%', delay: '1.7s', duration: '9.5s' },
+];
+
+const SPARKS = [
+  { left: '12%', top: '18%', delay: '0s' },
+  { left: '31%', top: '54%', delay: '1.1s' },
+  { left: '52%', top: '28%', delay: '0.4s' },
+  { left: '71%', top: '62%', delay: '1.6s' },
+  { left: '86%', top: '36%', delay: '0.8s' },
+];
 
 function questionNumberFor(team: AdminTeam) {
   if (team.completed) return TOTAL_QUESTIONS;
@@ -198,268 +216,293 @@ export default function AdminPage() {
     attemptedAnswers > 0 ? Math.round((totalCorrect / attemptedAnswers) * 100) : 0;
 
   return (
-    <Layout>
-      <div className="min-h-screen bg-[#0a0e27] px-3 py-4 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl space-y-5">
-          <header className="text-center sm:text-left">
-            <p className="text-xs uppercase tracking-[0.35em] text-[#d4af37]">Dungeon Master</p>
-            <h1 className="dungeon-title mt-2 text-3xl sm:text-4xl lg:text-5xl">LIVE CONTROL CENTER</h1>
-            <p className="dungeon-subtitle mt-1">Conquest of the Dungeon — V5</p>
-          </header>
-
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-            <Card className="p-4">
-              <p className="text-xs uppercase tracking-wide text-dungeon-text-secondary">Connected Players</p>
-              <p className="mt-2 text-3xl font-black text-[#d4af37]">
-                {players}
-                <span className="text-sm font-bold text-dungeon-text-secondary">/{MAX_PLAYERS}</span>
-              </p>
-            </Card>
-            <Card className="p-4">
-              <p className="text-xs uppercase tracking-wide text-dungeon-text-secondary">Teams</p>
-              <p className="mt-2 text-3xl font-black text-dungeon-blue">{totalTeams || teams.length}</p>
-            </Card>
-            <Card className="p-4">
-              <p className="text-xs uppercase tracking-wide text-dungeon-text-secondary">Teams Finished</p>
-              <p className="mt-2 text-3xl font-black text-dungeon-green">
-                {completedTeams}/{totalTeams || teams.length}
-              </p>
-            </Card>
-            <Card className="p-4">
-              <p className="text-xs uppercase tracking-wide text-dungeon-text-secondary">Current Question</p>
-              <p className="mt-2 text-3xl font-black">{currentQuestion}/{TOTAL_QUESTIONS}</p>
-            </Card>
-            <Card className="p-4">
-              <p className="text-xs uppercase tracking-wide text-dungeon-text-secondary">Current Stage</p>
-              <p className="mt-2 text-3xl font-black">{currentStage}/{TOTAL_STAGES}</p>
-            </Card>
-            <Card className="p-4">
-              <p className="text-xs uppercase tracking-wide text-dungeon-text-secondary">Status</p>
-              <p className="mt-2 text-2xl font-black text-dungeon-green">{statusLabel}</p>
-            </Card>
-          </div>
-
-          <Card>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <p className="text-xs uppercase tracking-[0.28em] text-[#d4af37]">Overall Tournament Progress</p>
-                <p className="mt-1 text-sm text-dungeon-text-secondary">
-                  {completedTeams} of {totalTeams || teams.length} teams have cleared the dungeon
-                </p>
-              </div>
-              <p className="text-2xl font-black text-[#d4af37]">{tournamentProgress}%</p>
-            </div>
-            <div className="mt-4 h-5 overflow-hidden border-2 border-[#d4af37] bg-[#0a0e27]">
-              <div
-                className="h-full bg-[#d4af37] transition-all duration-300"
-                style={{ width: `${Math.min(100, tournamentProgress)}%` }}
-              />
-            </div>
-          </Card>
-
-          {message && (
-            <Card>
-              <p>{message}</p>
-            </Card>
-          )}
-
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
-            <Button onClick={() => emit('admin:start_game')} variant="success" disabled={status !== 'lobby'}>
-              Start Game
-            </Button>
-            <Button onClick={() => emit('admin:next_question')} disabled={status !== 'live'}>
-              Next Question
-            </Button>
-            <Button onClick={() => emit('admin:next_stage')} disabled={status !== 'live'}>
-              Next Stage
-            </Button>
-            <Button onClick={() => emit('admin:show_leaderboard')} variant="secondary">
-              Show Leaderboard
-            </Button>
-            <Button onClick={() => emit('admin:end_game')} variant="danger" disabled={status === 'lobby'}>
-              End Game
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-            <Card>
-              <p className="text-xs uppercase tracking-[0.28em] text-[#d4af37]">Top 3 Teams</p>
-              <div className="mt-4 space-y-3">
-                {top3.length === 0 && (
-                  <p className="text-sm text-dungeon-text-secondary">Leaderboard appears after Start Game.</p>
-                )}
-                {top3.map((entry, index) => (
-                  <div key={entry.teamId} className="flex items-center justify-between border border-[#d4af37]/40 p-3">
-                    <div>
-                      <p className="font-black">
-                        {index === 0 ? '🏆' : index === 1 ? '🥈' : '🥉'} {entry.teamName}
-                      </p>
-                      <p className="text-xs uppercase text-dungeon-text-secondary">
-                        {formatAccuracyPercent(
-                          typeof entry.accuracyPercent === 'number'
-                            ? entry.accuracyPercent
-                            : teamAccuracyPercent(
-                                entry.totalCorrect,
-                                resolveActivePlayerCount(entry)
-                              )
-                        )}{' '}
-                        · {entry.totalCorrect} correct · {entry.totalTimeSeconds}s
-                      </p>
-                      <p className="text-xs text-dungeon-text-secondary">
-                        {formatPlayersRoster(
-                          resolveActivePlayerCount(entry),
-                          participatingMemberCount(entry)
-                        )}
-                      </p>
-                    </div>
-                    <p className="text-xl font-black text-[#d4af37]">#{entry.rank}</p>
-                  </div>
-                ))}
-              </div>
-            </Card>
-
-            <Card>
-              <p className="text-xs uppercase tracking-[0.28em] text-[#d4af37]">Fastest Teams</p>
-              <div className="mt-4 space-y-3">
-                {fastestTeams.length === 0 && (
-                  <p className="text-sm text-dungeon-text-secondary">Times appear as teams answer.</p>
-                )}
-                {fastestTeams.map((team, index) => (
-                  <div key={team.id} className="flex items-center justify-between border border-dungeon-text-secondary p-3">
-                    <div>
-                      <p className="font-bold">
-                        {index + 1}. {team.name}
-                      </p>
-                      <p className="text-xs uppercase text-dungeon-text-secondary">Lowest accumulated time</p>
-                    </div>
-                    <p className="font-black text-dungeon-blue">{team.totalTimeSeconds}s</p>
-                  </div>
-                ))}
-              </div>
-            </Card>
-
-            <Card className="text-center">
-              <p className="text-xs uppercase tracking-[0.28em] text-[#d4af37]">Tournament Accuracy %</p>
-              <p className="mt-6 text-6xl font-black text-dungeon-green">{accuracyPercent}%</p>
-              <p className="mt-3 text-sm text-dungeon-text-secondary">
-                {totalCorrect} correct answers recorded
-              </p>
-            </Card>
-          </div>
-
-          <Card className="overflow-hidden p-4 sm:p-6">
-            <p className="text-xs uppercase tracking-[0.28em] text-[#d4af37]">Top 10 Players</p>
-            <p className="mt-1 text-sm text-dungeon-text-secondary">
-              Live player standings from current game runtime totals
-            </p>
-            <div className="mt-4 overflow-x-auto">
-              <table className="min-w-full text-left text-sm">
-                <thead>
-                  <tr className="border-b border-[#d4af37] text-xs uppercase tracking-wide text-dungeon-text-secondary">
-                    <th className="py-2 pr-3">Rank</th>
-                    <th className="py-2 pr-3">Player Name</th>
-                    <th className="py-2 pr-3">Correct Answers</th>
-                    <th className="py-2 pr-3">Average Response Time</th>
-                    <th className="py-2">Total Points</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {top10Players.length === 0 && (
-                    <tr>
-                      <td colSpan={5} className="py-6 text-dungeon-text-secondary">
-                        Player rankings appear as answers are recorded.
-                      </td>
-                    </tr>
-                  )}
-                  {top10Players.map((player, index) => (
-                    <tr key={player.id} className="border-b border-dungeon-text-secondary/40">
-                      <td className="py-2 pr-3 font-black text-[#d4af37]">#{index + 1}</td>
-                      <td className="py-2 pr-3 font-bold">{player.displayName}</td>
-                      <td className="py-2 pr-3 text-dungeon-green">{player.correctCount || 0}</td>
-                      <td className="py-2 pr-3">{formatAverageTime(averageResponseTime(player))}</td>
-                      <td className="py-2 font-black text-[#d4af37]">{player.points || 0}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Card>
-
-          <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-            <Card className="xl:col-span-2 overflow-hidden p-4 sm:p-6">
-              <p className="text-xs uppercase tracking-[0.28em] text-[#d4af37]">Detailed Team Progress Table</p>
-              <div className="mt-4 overflow-x-auto">
-                <table className="min-w-full text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-[#d4af37] text-xs uppercase tracking-wide text-dungeon-text-secondary">
-                      <th className="py-2 pr-3">Team Name</th>
-                      <th className="py-2 pr-3">Stage</th>
-                      <th className="py-2 pr-3">Question</th>
-                      <th className="py-2 pr-3">Correct Answers</th>
-                      <th className="py-2 pr-3">Players</th>
-                      <th className="py-2 pr-3">Accuracy %</th>
-                      <th className="py-2">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {teams.length === 0 && (
-                      <tr>
-                        <td colSpan={7} className="py-6 text-dungeon-text-secondary">
-                          Teams will appear after the game starts.
-                        </td>
-                      </tr>
-                    )}
-                    {teams.map((team) => (
-                      <tr key={team.id} className="border-b border-dungeon-text-secondary/40">
-                        <td className="py-3 pr-3 font-bold">{team.name}</td>
-                        <td className="py-3 pr-3">{stageNumberFor(team)}/{TOTAL_STAGES}</td>
-                        <td className="py-3 pr-3">{questionNumberFor(team)}/{TOTAL_QUESTIONS}</td>
-                        <td className="py-3 pr-3 text-dungeon-green">{team.totalCorrect}</td>
-                        <td className="py-3 pr-3 text-dungeon-text-secondary">
-                          {formatPlayersRoster(
-                            resolveActivePlayerCount(team),
-                            participatingMemberCount(team)
-                          )}
-                        </td>
-                        <td className="py-3 pr-3 font-black text-[#d4af37]">
-                          {formatAccuracyPercent(
-                            teamAccuracyPercent(
-                              team.totalCorrect,
-                              resolveActivePlayerCount(team)
-                            )
-                          )}
-                        </td>
-                        <td className="py-3">
-                          <span className={team.completed ? 'text-dungeon-green' : 'text-[#d4af37]'}>
-                            {team.completed ? 'Finished' : 'In progress'}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </Card>
-
-            <Card>
-              <p className="text-xs uppercase tracking-[0.28em] text-[#d4af37]">Live Activity Feed</p>
-              <div className="mt-4 max-h-[420px] space-y-2 overflow-y-auto">
-                {feed.length === 0 && (
-                  <p className="text-sm text-dungeon-text-secondary">Waiting for live events...</p>
-                )}
-                {feed.map((item) => (
-                  <div key={item.id} className="border border-dungeon-text-secondary/40 px-3 py-2">
-                    <p className="text-[10px] uppercase tracking-wide text-[#d4af37]">{item.time}</p>
-                    <p className="text-sm">{item.text}</p>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          </div>
-
-          <LeaderboardPanel entries={leaderboard} />
-        </div>
+    <section className="landing-hero hall command">
+      <div className="landing-hero-bg" aria-hidden />
+      <div className="landing-hero-overlay" aria-hidden />
+      <div className="landing-hero-stone" aria-hidden />
+      <div className="landing-hero-glow is-left" aria-hidden />
+      <div className="landing-hero-glow is-right" aria-hidden />
+      <div className="hall-torch is-left" aria-hidden />
+      <div className="hall-torch is-right" aria-hidden />
+      <div className="hall-embers" aria-hidden>
+        {EMBERS.map((ember) => (
+          <span
+            key={ember.left}
+            className="hall-ember"
+            style={{
+              left: ember.left,
+              animationDelay: ember.delay,
+              animationDuration: ember.duration,
+            }}
+          />
+        ))}
       </div>
-    </Layout>
+      <div className="hall-sparks" aria-hidden>
+        {SPARKS.map((spark) => (
+          <span
+            key={`${spark.left}-${spark.top}`}
+            className="hall-spark"
+            style={{ left: spark.left, top: spark.top, animationDelay: spark.delay }}
+          />
+        ))}
+      </div>
+
+      <div className="dm-inner">
+        <header className="dm-header">
+          <h1 className="dm-title">DUNGEON MASTER CONTROL ROOM</h1>
+          <p className="dm-subtitle">Manage the challenge. Control the dungeon.</p>
+        </header>
+
+        <div className="dm-status">
+          <article className="dm-panel dm-status-card">
+            <p className="dm-status-label">⚔ Adventurers</p>
+            <p className="dm-status-value">
+              {players}/{MAX_PLAYERS}
+            </p>
+          </article>
+          <article className="dm-panel dm-status-card">
+            <p className="dm-status-label">🏰 Parties</p>
+            <p className="dm-status-value">{totalTeams || teams.length}</p>
+          </article>
+          <article className="dm-panel dm-status-card">
+            <p className="dm-status-label">🔥 Dungeon Status</p>
+            <p className="dm-status-value">{statusLabel}</p>
+          </article>
+          <article className="dm-panel dm-status-card">
+            <p className="dm-status-label">👑 Dungeon Master</p>
+            <p className="dm-status-value">In command</p>
+          </article>
+        </div>
+
+        <div className="dm-gauges">
+          <article className="dm-panel dm-status-card">
+            <p className="dm-status-label">Parties finished</p>
+            <p className="dm-status-value">
+              {completedTeams}/{totalTeams || teams.length}
+            </p>
+          </article>
+          <article className="dm-panel dm-status-card">
+            <p className="dm-status-label">Current question</p>
+            <p className="dm-status-value">
+              {currentQuestion}/{TOTAL_QUESTIONS}
+            </p>
+          </article>
+          <article className="dm-panel dm-status-card">
+            <p className="dm-status-label">Current stage</p>
+            <p className="dm-status-value">
+              {currentStage}/{TOTAL_STAGES}
+            </p>
+          </article>
+        </div>
+
+        <article className="dm-panel">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="dm-kicker">Overall Tournament Progress</p>
+              <p className="dm-copy">
+                {completedTeams} of {totalTeams || teams.length} teams have cleared the dungeon
+              </p>
+            </div>
+            <p className="dm-status-value">{tournamentProgress}%</p>
+          </div>
+          <div className="dm-progress-track">
+            <div className="dm-progress-fill" style={{ width: `${Math.min(100, tournamentProgress)}%` }} />
+          </div>
+        </article>
+
+        {message && (
+          <article className="dm-panel dm-message">
+            <p>{message}</p>
+          </article>
+        )}
+
+        <div className="dm-commands">
+          <button
+            type="button"
+            className="landing-enter dm-open"
+            onClick={() => emit('admin:start_game')}
+            disabled={status !== 'lobby'}
+          >
+            ⚔ OPEN THE DUNGEON ⚔
+          </button>
+          <button type="button" className="dm-cmd" onClick={() => emit('admin:next_question')} disabled={status !== 'live'}>
+            Next Question
+          </button>
+          <button type="button" className="dm-cmd" onClick={() => emit('admin:next_stage')} disabled={status !== 'live'}>
+            Next Stage
+          </button>
+          <button type="button" className="dm-cmd" onClick={() => emit('admin:show_leaderboard')}>
+            Show Leaderboard
+          </button>
+          <button
+            type="button"
+            className="dm-cmd is-danger"
+            onClick={() => emit('admin:end_game')}
+            disabled={status === 'lobby'}
+          >
+            End Game
+          </button>
+        </div>
+
+        <div className="dm-grid-3">
+          <article className="dm-panel">
+            <p className="dm-kicker">Top 3 Teams</p>
+            <div className="mt-4 space-y-3">
+              {top3.length === 0 && <p className="dm-empty">Leaderboard appears after Start Game.</p>}
+              {top3.map((entry, index) => (
+                <div key={entry.teamId} className="dm-rank-row">
+                  <div>
+                    <p className="dm-team-name">
+                      {RANK_MEDALS[index] || `#${entry.rank}`} {entry.teamName}
+                    </p>
+                    <p className="dm-copy">
+                      {formatAccuracyPercent(
+                        typeof entry.accuracyPercent === 'number'
+                          ? entry.accuracyPercent
+                          : teamAccuracyPercent(entry.totalCorrect, resolveActivePlayerCount(entry))
+                      )}{' '}
+                      · {entry.totalCorrect} correct · {entry.totalTimeSeconds}s
+                    </p>
+                    <p className="dm-copy">
+                      {formatPlayersRoster(
+                        resolveActivePlayerCount(entry),
+                        participatingMemberCount(entry)
+                      )}
+                    </p>
+                  </div>
+                  <p className="dm-medal">#{entry.rank}</p>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <article className="dm-panel">
+            <p className="dm-kicker">Fastest Teams</p>
+            <div className="mt-4 space-y-3">
+              {fastestTeams.length === 0 && <p className="dm-empty">Times appear as teams answer.</p>}
+              {fastestTeams.map((team, index) => (
+                <div key={team.id} className="dm-rank-row">
+                  <div>
+                    <p className="dm-team-name">
+                      {index + 1}. {team.name}
+                    </p>
+                    <p className="dm-copy">Lowest accumulated time</p>
+                  </div>
+                  <p className="dm-medal">{team.totalTimeSeconds}s</p>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <article className="dm-panel" style={{ textAlign: 'center' }}>
+            <p className="dm-kicker">Tournament Accuracy %</p>
+            <p className="dm-status-value" style={{ fontSize: '3.4rem', marginTop: '1.2rem' }}>
+              {accuracyPercent}%
+            </p>
+            <p className="dm-copy">{totalCorrect} correct answers recorded</p>
+          </article>
+        </div>
+
+        <article className="dm-panel">
+          <p className="dm-kicker">Hall of Heroes</p>
+          <p className="dm-copy">Live player standings from current game runtime totals</p>
+          <div className="dm-heroes mt-4">
+            <table>
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Player Name</th>
+                  <th>Correct Answers</th>
+                  <th>Average Response Time</th>
+                  <th>Total Points</th>
+                </tr>
+              </thead>
+              <tbody>
+                {top10Players.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="dm-empty">
+                      Player rankings appear as answers are recorded.
+                    </td>
+                  </tr>
+                )}
+                {top10Players.map((player, index) => (
+                  <tr
+                    key={player.id}
+                    className={index === 0 ? 'is-top is-first' : index < 3 ? 'is-top' : ''}
+                  >
+                    <td className="dm-medal">
+                      {RANK_MEDALS[index] || `#${index + 1}`}
+                    </td>
+                    <td>{player.displayName}</td>
+                    <td>{player.correctCount || 0}</td>
+                    <td>{formatAverageTime(averageResponseTime(player))}</td>
+                    <td className="dm-medal">{player.points || 0}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <div className="dm-grid-split">
+          <article className="dm-panel">
+            <p className="dm-kicker">Party Status</p>
+            {teams.length === 0 && <p className="dm-empty mt-4">Teams will appear after the game starts.</p>}
+            <div className="dm-teams mt-4">
+              {teams.map((team) => (
+                <article key={team.id} className="dm-panel dm-team">
+                  <h3 className="dm-team-name">{team.name}</h3>
+                  <div className="dm-team-meta">
+                    <p>
+                      Players:{' '}
+                      <strong>
+                        {formatPlayersRoster(
+                          resolveActivePlayerCount(team),
+                          participatingMemberCount(team)
+                        ).replace('Players: ', '')}
+                      </strong>
+                    </p>
+                    <p>
+                      Ready Status:{' '}
+                      <strong>{team.completed ? 'Finished' : 'In progress'}</strong>
+                    </p>
+                    <p>
+                      Accuracy %:{' '}
+                      <strong>
+                        {formatAccuracyPercent(
+                          teamAccuracyPercent(team.totalCorrect, resolveActivePlayerCount(team))
+                        )}
+                      </strong>
+                    </p>
+                    <p>
+                      Current Progress:{' '}
+                      <strong>
+                        Stage {stageNumberFor(team)}/{TOTAL_STAGES} · Question {questionNumberFor(team)}/
+                        {TOTAL_QUESTIONS} · {team.totalCorrect} correct
+                      </strong>
+                    </p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </article>
+
+          <article className="dm-panel">
+            <p className="dm-kicker">Live Activity Feed</p>
+            <div className="dm-feed mt-4">
+              {feed.length === 0 && <p className="dm-empty">Waiting for live events...</p>}
+              {feed.map((item) => (
+                <div key={item.id} className="dm-feed-item">
+                  <p className="dm-feed-time">{item.time}</p>
+                  <p className="dm-feed-text">{item.text}</p>
+                </div>
+              ))}
+            </div>
+          </article>
+        </div>
+
+        <LeaderboardPanel entries={leaderboard} />
+      </div>
+    </section>
   );
 }

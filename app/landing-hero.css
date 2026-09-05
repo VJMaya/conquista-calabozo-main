@@ -2,7 +2,7 @@
   position: relative;
   isolation: isolate;
   min-height: 100vh;
-  overflow: hidden;
+  overflow: auto;
   color: #f4e8c8;
   background-color: #07050c;
   font-family: Georgia, 'Times New Roman', serif;
@@ -124,7 +124,7 @@
 }
 
 .landing-gate {
-  width: min(42rem, 100%);
+  width: min(46rem, 100%);
   margin: 1.5rem auto 1.75rem;
   padding: 1.5rem 1.25rem 1.35rem;
   border: 1px solid rgba(212, 175, 55, 0.55);
@@ -161,6 +161,65 @@
   box-shadow: 0 0 0 1px #e8c86a, 0 0 18px rgba(148, 72, 220, 0.35);
 }
 
+.landing-showcase {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0.85rem 0 0.35rem;
+  padding: 1.1rem 0.75rem 0.85rem;
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  background: rgba(8, 6, 14, 0.55);
+  overflow: hidden;
+}
+
+.landing-showcase-aura {
+  pointer-events: none;
+  position: absolute;
+  width: 14rem;
+  height: 14rem;
+  top: 8%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.42), transparent 68%);
+  filter: blur(8px);
+  animation: landing-aura 3.4s ease-in-out infinite;
+}
+
+.landing-showcase-art {
+  position: relative;
+  z-index: 1;
+  width: min(16rem, 72vw);
+  height: 13.5rem;
+}
+
+.landing-showcase-art img {
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(0 0 18px rgba(168, 85, 247, 0.45)) drop-shadow(0 10px 14px rgba(0, 0, 0, 0.7));
+}
+
+.landing-showcase-name {
+  position: relative;
+  z-index: 1;
+  margin: 0.35rem 0 0;
+  color: #e8c86a;
+  font-size: 1.35rem;
+  font-weight: 900;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  text-shadow: 0 0 16px rgba(212, 175, 55, 0.45);
+}
+
+.landing-showcase-line {
+  position: relative;
+  z-index: 1;
+  margin: 0.2rem 0 0;
+  color: #f0e6c8;
+  font-size: 0.92rem;
+  letter-spacing: 0.03em;
+  text-align: center;
+}
+
 .landing-classes {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -176,12 +235,13 @@
   color: #c4b48a;
   cursor: pointer;
   padding: 0.55rem 0.4rem 0.7rem;
+  transform: scale(1);
   transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 }
 
 .landing-class:hover:not(:disabled) {
   border-color: rgba(212, 175, 55, 0.7);
-  transform: translateY(-2px);
+  transform: translateY(-2px) scale(1.02);
 }
 
 .landing-class:disabled {
@@ -190,18 +250,33 @@
 }
 
 .landing-class.is-selected {
+  z-index: 1;
   border-color: #e8c86a;
   color: #f8ecd0;
+  transform: scale(1.07);
   box-shadow:
-    0 0 0 1px rgba(232, 200, 106, 0.8),
-    0 0 22px rgba(168, 85, 247, 0.55),
-    0 0 36px rgba(212, 175, 55, 0.28);
+    0 0 0 1px rgba(232, 200, 106, 0.9),
+    0 0 18px rgba(212, 175, 55, 0.55),
+    0 0 28px rgba(168, 85, 247, 0.55);
+}
+
+.landing-class.is-selected:hover:not(:disabled) {
+  transform: scale(1.07);
+}
+
+.landing-class.is-selected::before {
+  content: '';
+  pointer-events: none;
+  position: absolute;
+  inset: -30% -10% auto;
+  height: 70%;
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.45), transparent 70%);
 }
 
 .landing-class-art {
   position: relative;
   width: 100%;
-  height: 7.25rem;
+  height: 6.4rem;
   margin: 0 auto 0.4rem;
 }
 
@@ -294,11 +369,15 @@
   }
 
   .landing-classes {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .landing-class-art {
-    height: 8.5rem;
+    height: 7.6rem;
+  }
+
+  .landing-showcase-art {
+    height: 16.5rem;
   }
 
   .landing-stats {
@@ -307,5 +386,25 @@
 
   .landing-gate {
     padding: 1.75rem 1.75rem 1.5rem;
+  }
+}
+
+@keyframes landing-aura {
+  0%,
+  100% {
+    opacity: 0.7;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-showcase-aura,
+  .landing-class {
+    animation: none;
+    transition: none;
   }
 }
